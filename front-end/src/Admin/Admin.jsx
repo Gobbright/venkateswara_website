@@ -24,8 +24,8 @@ export default function Admin() {
   const [session, setSession] = useState(() => getAdminSession());
   const navigate = useNavigate();
 
-  const handleLogin = ({ email, password }) => {
-    const result = loginAdmin({ email, password });
+  const handleLogin = async ({ email, password }) => {
+    const result = await loginAdmin({ email, password });
 
     if (result.ok) {
       const nextSession = getAdminSession();
@@ -33,7 +33,7 @@ export default function Admin() {
       navigate(getAdminStartPath(nextSession?.user), { replace: true });
     }
 
-    return result.ok;
+    return result;
   };
 
   const handleLogout = () => {

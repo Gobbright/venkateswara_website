@@ -1,18 +1,28 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowRight, LockKeyhole, Mail, ShieldCheck, Store } from "lucide-react";
-import { ADMIN_USERS } from "../auth/jwtAuth";
+import { ADMIN_USERS, fetchDemoAdmins } from "../auth/jwtAuth";
 
 export default function AdminLogin({ onLogin }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [demoAdmins, setDemoAdmins] = useState(ADMIN_USERS);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (event) => {
+  useEffect(() => {
+    fetchDemoAdmins()
+      .then(setDemoAdmins)
+      .catch(() => setDemoAdmins(ADMIN_USERS));
+  }, []);
+
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    const isValidLogin = onLogin({ email, password });
+    setIsLoading(true);
+    const result = await onLogin({ email, password });
 
-    if (!isValidLogin) {
-      setError("Correct email and password enter pannunga.");
+    if (!result.ok) {
+      setError(result.message || "Correct email and password enter pannunga.");
+      setIsLoading(false);
     }
   };
 
@@ -93,9 +103,10 @@ export default function AdminLogin({ onLogin }) {
 
           <button
             type="submit"
-            className="mt-6 flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[#4DA7AF] px-5 text-sm font-extrabold text-white transition hover:bg-[#23777f]"
+            disabled={isLoading}
+            className="mt-6 flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[#4DA7AF] px-5 text-sm font-extrabold text-white transition hover:bg-[#23777f] disabled:cursor-not-allowed disabled:opacity-70"
           >
-            Login Dashboard
+            {isLoading ? "Checking..." : "Login Dashboard"}
             <ArrowRight size={18} />
           </button>
 
@@ -104,19 +115,19 @@ export default function AdminLogin({ onLogin }) {
               Demo Logins
             </p>
             <div className="mt-3 grid gap-2">
-              {ADMIN_USERS.map((user) => (
+              {demoAdmins.map((user) => (
                 <button
                   key={user.email}
                   type="button"
                   onClick={() => {
                     setEmail(user.email);
-                    setPassword(user.password);
+                    setPassword(ADMIN_USERS.find((adminUser) => adminUser.email === user.email)?.password || "");
                     setError("");
                   }}
                   className="rounded-xl bg-white px-3 py-2 text-left text-xs font-bold text-slate-600 transition hover:bg-[#e9fbfc] hover:text-[#23777f]"
                 >
                   <span className="block text-slate-900">{user.name} - {user.label}</span>
-                  {user.email} / {user.password}
+                  {user.email}
                 </button>
               ))}
             </div>

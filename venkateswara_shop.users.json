@@ -1,0 +1,346 @@
+[{
+  "_id": {
+    "$oid": "6a02fc467a029e80ba1ccd6b"
+  },
+  "database": {
+    "name": "venkateswara_shop",
+    "mongoUri": "mongodb://127.0.0.1:27017/venkateswara_shop",
+    "collections": {
+      "users": {
+        "name": "users",
+        "purpose": "Admin demo users and registered customer login data store pannura collection."
+      }
+    }
+  },
+  "importantRule": {
+    "demoUserTextShow": true,
+    "loginCheckFromDatabase": true,
+    "note": "Demo users frontend la text ah show aagum. Aana login button click pannumbothu backend MongoDB users collection la email/password verify pannitu valid na mattum dashboard open aagum."
+  },
+  "userCollectionSchema": {
+    "collection": "users",
+    "fields": {
+      "_id": "ObjectId",
+      "name": "String - required",
+      "email": "String - required - unique - lowercase",
+      "phone": "String",
+      "password": "String - required - hashed password",
+      "role": "String - customer/main-admin/orders-manager/support-viewer",
+      "label": "String",
+      "permissions": "Array<String>",
+      "startPath": "String",
+      "createdAt": "Date",
+      "updatedAt": "Date"
+    }
+  },
+  "demoUsersToSeedInDatabase": [
+    {
+      "name": "Main Admin",
+      "email": "admin@gobrightglobal.com",
+      "plainTextPasswordForDemoOnly": "admin123",
+      "passwordStoredInDb": "hashed by backend before insert",
+      "phone": "",
+      "role": "main-admin",
+      "label": "All access",
+      "permissions": [
+        "dashboard",
+        "orders",
+        "category",
+        "products",
+        "product-add",
+        "users",
+        "video-calls",
+        "enquiries"
+      ],
+      "startPath": "/admin/dashboard"
+    },
+    {
+      "name": "Orders Manager",
+      "email": "orders@gobrightglobal.com",
+      "plainTextPasswordForDemoOnly": "orders123",
+      "passwordStoredInDb": "hashed by backend before insert",
+      "phone": "",
+      "role": "orders-manager",
+      "label": "Orders, category, product list, product add",
+      "permissions": [
+        "orders",
+        "category",
+        "products",
+        "product-add"
+      ],
+      "startPath": "/admin/orders"
+    },
+    {
+      "name": "Support Viewer",
+      "email": "support@gobrightglobal.com",
+      "plainTextPasswordForDemoOnly": "support123",
+      "passwordStoredInDb": "hashed by backend before insert",
+      "phone": "",
+      "role": "support-viewer",
+      "label": "Users, video calls, enquiries view",
+      "permissions": [
+        "users",
+        "video-calls",
+        "enquiries"
+      ],
+      "startPath": "/admin/users"
+    }
+  ],
+  "registerDataStoreFlow": {
+    "frontendPage": "front-end/src/other/auth/Auth.jsx",
+    "apiHelper": "front-end/src/utils/api.js",
+    "backendRoute": "backend/src/routes/authRoutes.js",
+    "backendController": "backend/src/controllers/authController.js",
+    "backendModel": "backend/src/models/User.js",
+    "api": {
+      "method": "POST",
+      "url": "http://localhost:5000/api/auth/register",
+      "body": {
+        "name": "Test User",
+        "email": "test@example.com",
+        "phone": "9876543210",
+        "password": "user123"
+      }
+    },
+    "storedInMongoDb": {
+      "collection": "users",
+      "documentExample": {
+        "name": "Test User",
+        "email": "test@example.com",
+        "phone": "9876543210",
+        "password": "hashed password, not plain text",
+        "role": "customer",
+        "label": "Customer",
+        "permissions": [],
+        "startPath": "/"
+      }
+    }
+  },
+  "loginCheckFlow": {
+    "customerLogin": {
+      "frontendPage": "front-end/src/other/auth/Auth.jsx",
+      "backendApi": "POST /api/auth/login",
+      "mongoCheck": {
+        "collection": "users",
+        "findBy": {
+          "email": "request body email"
+        },
+        "passwordCheck": "backend verifyPassword(request password, db hashed password)",
+        "success": "return token and user",
+        "failed": "return 401 Invalid email or password"
+      },
+      "requestExample": {
+        "method": "POST",
+        "url": "http://localhost:5000/api/auth/login",
+        "body": {
+          "email": "test@example.com",
+          "password": "user123"
+        }
+      }
+    },
+    "adminLogin": {
+      "frontendPage": "front-end/src/Admin/Login/AdminLogin.jsx",
+      "frontendAuthFile": "front-end/src/Admin/auth/jwtAuth.js",
+      "backendApi": "POST /api/auth/admin/login",
+      "mongoCheck": {
+        "collection": "users",
+        "findBy": {
+          "email": "request body email"
+        },
+        "extraCondition": "role must not be customer",
+        "passwordCheck": "backend verifyPassword(request password, db hashed password)",
+        "success": "return token and admin user, dashboard open",
+        "failed": "return 401 Invalid admin email or password"
+      },
+      "requestExample": {
+        "method": "POST",
+        "url": "http://localhost:5000/api/auth/admin/login",
+        "body": {
+          "email": "admin@gobrightglobal.com",
+          "password": "admin123"
+        }
+      }
+    }
+  },
+  "backendCodeMap": {
+    "routes": {
+      "file": "backend/src/routes/authRoutes.js",
+      "code": [
+        "router.get('/demo-admins', getDemoAdmins);",
+        "router.post('/register', registerUser);",
+        "router.post('/login', loginUser);",
+        "router.post('/admin/login', loginAdmin);"
+      ]
+    },
+    "serverSeed": {
+      "file": "backend/src/server.js",
+      "code": "await seedAdminUsers();"
+    },
+    "seedFile": {
+      "file": "backend/src/seed/adminUsers.js",
+      "logic": "If demo admin email already exists, skip. Otherwise hash password and insert into users collection."
+    },
+    "registerController": {
+      "file": "backend/src/controllers/authController.js",
+      "logic": [
+        "Read name, email, phone, password from request body.",
+        "Check required fields.",
+        "Check users collection for existing email.",
+        "Hash password.",
+        "Create user with role customer.",
+        "Return token and user."
+      ]
+    },
+    "loginController": {
+      "file": "backend/src/controllers/authController.js",
+      "logic": [
+        "Find user by email in users collection.",
+        "Verify request password with stored hashed password.",
+        "If valid, return token and user.",
+        "If invalid, return 401."
+      ]
+    },
+    "adminLoginController": {
+      "file": "backend/src/controllers/authController.js",
+      "logic": [
+        "Find user by email in users collection.",
+        "Check role is not customer.",
+        "Verify password.",
+        "If valid, return token and admin user.",
+        "If invalid, return 401."
+      ]
+    }
+  },
+  "frontendCodeMap": {
+    "demoUserTextShow": {
+      "file": "front-end/src/Admin/Login/AdminLogin.jsx",
+      "logic": "fetchDemoAdmins() demo admin details load panni login page la text/button ah show pannum."
+    },
+    "adminDbLoginCheck": {
+      "file": "front-end/src/Admin/auth/jwtAuth.js",
+      "logic": "loginAdmin() POST /api/auth/admin/login call pannum. Backend MongoDB users collection check pannum."
+    },
+    "customerRegisterAndLogin": {
+      "file": "front-end/src/other/auth/Auth.jsx",
+      "logic": "Register mode POST /api/auth/register. Login mode POST /api/auth/login."
+    }
+  },
+  "mongoshQueries": {
+    "useDatabase": "use venkateswara_shop",
+    "showAllUsersWithoutPassword": "db.users.find({}, { password: 0 }).pretty()",
+    "showDemoAdminsWithoutPassword": "db.users.find({ role: { $ne: 'customer' } }, { password: 0 }).pretty()",
+    "showRegisteredCustomersWithoutPassword": "db.users.find({ role: 'customer' }, { password: 0 }).pretty()",
+    "findOneUserWithoutPassword": "db.users.findOne({ email: 'test@example.com' }, { password: 0 })",
+    "countAllUsers": "db.users.countDocuments()",
+    "countAdmins": "db.users.countDocuments({ role: { $ne: 'customer' } })",
+    "countCustomers": "db.users.countDocuments({ role: 'customer' })"
+  },
+  "testSteps": [
+    "1. backend/.env la MONGO_URI and JWT_SECRET set pannunga.",
+    "2. cd backend",
+    "3. npm run dev",
+    "4. Backend start aagumbothu 3 demo admins users collection la seed aagum.",
+    "5. Frontend /admin page la demo user text show aagum.",
+    "6. Demo user click pannitu login panna backend MongoDB users collection check pannum.",
+    "7. Customer /login page la register pannina same users collection la customer role oda store aagum.",
+    "8. Customer login panna MongoDB la irunthu email/password verify pannum."
+  ]
+},
+{
+  "_id": {
+    "$oid": "6a02ff6c871a9c8838dcf9a3"
+  },
+  "name": "Main Admin",
+  "email": "admin@gobrightglobal.com",
+  "phone": "",
+  "password": "120000:a9b932c61e38755bef4946047456b5c3:b997c6002f567abbe54d57b3e73fc6040a887385366ed5089fdd3f15870a1707bbd3b3c7d54b3c47f900875bc178a80a522c35dd9b7e0c2fc9e132927a4ce813",
+  "role": "main-admin",
+  "label": "All access",
+  "permissions": [
+    "dashboard",
+    "orders",
+    "category",
+    "products",
+    "product-add",
+    "users",
+    "video-calls",
+    "enquiries"
+  ],
+  "startPath": "/admin/dashboard",
+  "createdAt": {
+    "$date": "2026-05-12T10:22:36.756Z"
+  },
+  "updatedAt": {
+    "$date": "2026-05-12T10:22:36.756Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6a02ff6c871a9c8838dcf9a6"
+  },
+  "name": "Support Viewer",
+  "email": "support@gobrightglobal.com",
+  "phone": "",
+  "password": "120000:48ed9a7a37857f3a1c72b6dcbf3936e8:084b557d9243d45a4cf3e3bbe1baa7befe29598b92fa215804007da2b2cfad90dd0eb58714e34c8cebbcca0a9f73c9ef0dedc318edc62feb8a0e50c4a4421d74",
+  "role": "support-viewer",
+  "label": "Users, video calls, enquiries view",
+  "permissions": [
+    "users",
+    "video-calls",
+    "enquiries"
+  ],
+  "startPath": "/admin/users",
+  "createdAt": {
+    "$date": "2026-05-12T10:22:36.880Z"
+  },
+  "updatedAt": {
+    "$date": "2026-05-12T10:22:36.880Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6a02ff6c871a9c8838dcf9a8"
+  },
+  "name": "Orders Manager",
+  "email": "orders@gobrightglobal.com",
+  "phone": "",
+  "password": "120000:d47b29784d9b5d698d9db858c2083197:111103d01e61520794cfac39bf0121d242245a68598af5bd496e6dae43b67397f71589a0dde65348d4c3b7cfcc15a3d1b3878358d297f541618cd9eaec7d7811",
+  "role": "orders-manager",
+  "label": "Orders, category, product list, product add",
+  "permissions": [
+    "orders",
+    "category",
+    "products",
+    "product-add"
+  ],
+  "startPath": "/admin/orders",
+  "createdAt": {
+    "$date": "2026-05-12T10:22:36.983Z"
+  },
+  "updatedAt": {
+    "$date": "2026-05-12T10:22:36.983Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6a02ff96871a9c8838dcf9ac"
+  },
+  "name": "Anbu",
+  "email": "admin123@gobrightglobal.com",
+  "phone": "08682832943",
+  "password": "120000:09d41a2d646562d50031059ed6ad6f5e:c9a08171d1be442d930111033b69d281b816a550e72342cf2fcb9deb8de69f72ed3d7cb4aca772350861ed102833244072b6b309b9eef1c7d59e23adcbad526c",
+  "role": "customer",
+  "label": "Customer",
+  "permissions": [],
+  "startPath": "/",
+  "createdAt": {
+    "$date": "2026-05-12T10:23:18.802Z"
+  },
+  "updatedAt": {
+    "$date": "2026-05-12T10:44:45.479Z"
+  },
+  "__v": 0
+}]

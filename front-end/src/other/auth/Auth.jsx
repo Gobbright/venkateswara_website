@@ -1,10 +1,59 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { LockKeyhole, Mail, Phone, ShieldCheck, UserRound } from "lucide-react";
+import { authRequest } from "../../utils/api";
+import { saveUserSession } from "../../utils/userSession";
 
 const Auth = () => {
+  const navigate = useNavigate();
   const [mode, setMode] = useState("login");
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    password: "",
+    confirmPassword: "",
+  });
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const isLogin = mode === "login";
+
+  const updateField = (field, value) => {
+    setForm((currentForm) => ({ ...currentForm, [field]: value }));
+    setError("");
+    setMessage("");
+  };
+
+  const handleModeChange = (nextMode) => {
+    setMode(nextMode);
+    setError("");
+    setMessage("");
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setError("");
+    setMessage("");
+
+    if (!isLogin && form.password !== form.confirmPassword) {
+      setError("Password and confirm password same illa.");
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const result = await authRequest(isLogin ? "/auth/login" : "/auth/register", form);
+      saveUserSession(result);
+      setMessage(isLogin ? "Login success." : "Account create aachu. MongoDB la store aagiduchu.");
+      navigate("/", { replace: true });
+    } catch (requestError) {
+      setError(requestError.message || "Login/register failed.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <section className="min-h-screen bg-[#FAF0E6] px-5 py-8 text-[#1a0a00] md:px-16 md:py-10">
@@ -13,7 +62,7 @@ const Auth = () => {
           <div className="grid grid-cols-2 rounded-full bg-orange-50 p-1">
             <button
               type="button"
-              onClick={() => setMode("login")}
+              onClick={() => handleModeChange("login")}
               className={`h-11 rounded-full text-base font-bold transition ${
                 isLogin ? "bg-orange-600 text-white shadow-[0_6px_16px_rgba(249,115,22,0.28)]" : "text-gray-700 hover:text-orange-600"
               }`}
@@ -22,7 +71,7 @@ const Auth = () => {
             </button>
             <button
               type="button"
-              onClick={() => setMode("register")}
+              onClick={() => handleModeChange("register")}
               className={`h-11 rounded-full text-base font-bold transition ${
                 !isLogin ? "bg-orange-600 text-white shadow-[0_6px_16px_rgba(249,115,22,0.28)]" : "text-gray-700 hover:text-orange-600"
               }`}
@@ -40,14 +89,14 @@ const Auth = () => {
             </p>
           </div>
 
-          <form className="mt-6 space-y-4">
+          <form onSubmit={handleSubmit} className="mt-6 space-y-4">
             {!isLogin && (
               <label className="block">
                 <span className="mb-2 flex items-center gap-2 text-sm font-bold text-gray-800">
                   <UserRound size={17} className="text-orange-600" />
                   Full Name
                 </span>
-                <input className="h-12 w-full rounded-full bg-orange-50 px-5 text-base outline-none transition focus:bg-white focus:ring-2 focus:ring-orange-300" placeholder="Enter your name" />
+                <input required value={form.name} onChange={(event) => updateField("name", event.target.value)} className="h-12 w-full rounded-full bg-orange-50 px-5 text-base outline-none transition focus:bg-white focus:ring-2 focus:ring-orange-300" placeholder="Enter your name" />
               </label>
             )}
 
@@ -56,7 +105,7 @@ const Auth = () => {
                 <Mail size={17} className="text-orange-600" />
                 Email Address
               </span>
-              <input className="h-12 w-full rounded-full bg-orange-50 px-5 text-base outline-none transition focus:bg-white focus:ring-2 focus:ring-orange-300" placeholder="Enter your email" />
+              <input required type="email" value={form.email} onChange={(event) => updateField("email", event.target.value)} className="h-12 w-full rounded-full bg-orange-50 px-5 text-base outline-none transition focus:bg-white focus:ring-2 focus:ring-orange-300" placeholder="Enter your email" />
             </label>
 
             {!isLogin && (
@@ -65,7 +114,7 @@ const Auth = () => {
                   <Phone size={17} className="text-orange-600" />
                   Phone Number
                 </span>
-                <input className="h-12 w-full rounded-full bg-orange-50 px-5 text-base outline-none transition focus:bg-white focus:ring-2 focus:ring-orange-300" placeholder="Enter phone number" />
+                <input value={form.phone} onChange={(event) => updateField("phone", event.target.value)} className="h-12 w-full rounded-full bg-orange-50 px-5 text-base outline-none transition focus:bg-white focus:ring-2 focus:ring-orange-300" placeholder="Enter phone number" />
               </label>
             )}
 
@@ -74,7 +123,7 @@ const Auth = () => {
                 <LockKeyhole size={17} className="text-orange-600" />
                 Password
               </span>
-              <input type="password" className="h-12 w-full rounded-full bg-orange-50 px-5 text-base outline-none transition focus:bg-white focus:ring-2 focus:ring-orange-300" placeholder="Enter password" />
+              <input required type="password" value={form.password} onChange={(event) => updateField("password", event.target.value)} className="h-12 w-full rounded-full bg-orange-50 px-5 text-base outline-none transition focus:bg-white focus:ring-2 focus:ring-orange-300" placeholder="Enter password" />
             </label>
 
             {!isLogin && (
@@ -83,7 +132,7 @@ const Auth = () => {
                   <LockKeyhole size={17} className="text-orange-600" />
                   Confirm Password
                 </span>
-                <input type="password" className="h-12 w-full rounded-full bg-orange-50 px-5 text-base outline-none transition focus:bg-white focus:ring-2 focus:ring-orange-300" placeholder="Confirm password" />
+                <input required type="password" value={form.confirmPassword} onChange={(event) => updateField("confirmPassword", event.target.value)} className="h-12 w-full rounded-full bg-orange-50 px-5 text-base outline-none transition focus:bg-white focus:ring-2 focus:ring-orange-300" placeholder="Confirm password" />
               </label>
             )}
 
@@ -99,11 +148,24 @@ const Auth = () => {
               </div>
             )}
 
+            {error && (
+              <p className="rounded-2xl bg-red-50 px-4 py-3 text-sm font-bold text-red-700">
+                {error}
+              </p>
+            )}
+
+            {message && (
+              <p className="rounded-2xl bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-700">
+                {message}
+              </p>
+            )}
+
             <button
-              type="button"
-              className="flex h-12 w-full items-center justify-center rounded-full bg-orange-600 px-5 text-base font-bold text-white transition hover:scale-[1.02] hover:bg-gradient-to-r hover:from-orange-600 hover:via-[#FFBE8A] hover:to-[#4DA7AF]"
+              type="submit"
+              disabled={isLoading}
+              className="flex h-12 w-full items-center justify-center rounded-full bg-orange-600 px-5 text-base font-bold text-white transition hover:scale-[1.02] hover:bg-gradient-to-r hover:from-orange-600 hover:via-[#FFBE8A] hover:to-[#4DA7AF] disabled:cursor-not-allowed disabled:opacity-70"
             >
-              {isLogin ? "Login" : "Create Account"}
+              {isLoading ? "Checking..." : isLogin ? "Login" : "Create Account"}
             </button>
 
             {isLogin && (

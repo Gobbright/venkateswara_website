@@ -1,11 +1,13 @@
 import { useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
-  Heart, ShoppingCart, User, MapPin, Truck, Headphones, Video, Search, X, ChevronDown, Phone, Mail, Menu
+  Heart, ShoppingCart, User, MapPin, Truck, Headphones, Video, Search, X, ChevronDown, Phone, Mail, Menu, LogOut, Save
 } from "lucide-react";
 import { useState } from "react";
 import logoImg from "../assets/Images/logo.png";
 import { getShopNotificationCount } from "../utils/shopNotifications";
+import { authorizedRequest } from "../utils/api";
+import { clearUserSession, getStoredUser, saveUserSession } from "../utils/userSession";
 
 const Nav = () => {
   const location = useLocation();
@@ -17,6 +19,15 @@ const Nav = () => {
   const [wishlistCount, setWishlistCount] = useState(() => getShopNotificationCount("wishlist"));
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState(() => getStoredUser());
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [profileForm, setProfileForm] = useState(() => ({
+    name: getStoredUser()?.name || "",
+    phone: getStoredUser()?.phone || "",
+  }));
+  const [profileError, setProfileError] = useState("");
+  const [profileMessage, setProfileMessage] = useState("");
+  const [isProfileSaving, setIsProfileSaving] = useState(false);
   const otherCloseTimer = useRef(null);
 
   const otherLinks = [
@@ -68,7 +79,32 @@ const Nav = () => {
 
   useEffect(() => {
     setMobileMenuOpen(false);
+    const user = getStoredUser();
+    setCurrentUser(user);
+    setProfileForm({
+      name: user?.name || "",
+      phone: user?.phone || "",
+    });
   }, [location.pathname]);
+
+  useEffect(() => {
+    const syncUser = () => {
+      const user = getStoredUser();
+      setCurrentUser(user);
+      setProfileForm({
+        name: user?.name || "",
+        phone: user?.phone || "",
+      });
+    };
+
+    window.addEventListener("svfs-user-change", syncUser);
+    window.addEventListener("storage", syncUser);
+
+    return () => {
+      window.removeEventListener("svfs-user-change", syncUser);
+      window.removeEventListener("storage", syncUser);
+    };
+  }, []);
 
   useEffect(() => {
     document.body.style.overflow = mobileMenuOpen ? "hidden" : "";
@@ -119,6 +155,55 @@ const Nav = () => {
       window.removeEventListener("storage", syncNotifications);
     };
   }, []);
+
+  const handleProfileOpen = () => {
+    setProfileError("");
+    setProfileMessage("");
+    setProfileOpen(true);
+  };
+
+  const handleProfileUpdate = async (event) => {
+    event.preventDefault();
+    setProfileError("");
+    setProfileMessage("");
+    setIsProfileSaving(true);
+
+    try {
+      const result = await authorizedRequest("/auth/me", {
+        method: "PUT",
+        body: JSON.stringify(profileForm),
+      });
+      saveUserSession(result);
+      setCurrentUser(result.user);
+      setProfileMessage("Profile update aachu.");
+    } catch (error) {
+      setProfileError(error.message || "Profile update panna mudiyala.");
+    } finally {
+      setIsProfileSaving(false);
+    }
+  };
+
+  const handleLogout = () => {
+    clearUserSession();
+    setCurrentUser(null);
+    setProfileOpen(false);
+    setMobileMenuOpen(false);
+  };
+
+  const profileButton = (className = "") => currentUser ? (
+    <button
+      type="button"
+      onClick={handleProfileOpen}
+      className={className || "flex items-center gap-2 bg-orange-600 px-5 py-2 !rounded-full text-sm font-semibold text-white transition hover:bg-[#4DA7AF]"}
+    >
+      <User size={18} />
+      {currentUser.name}
+    </button>
+  ) : (
+    <Link to="/login" className={className || "bg-orange-600 text-white px-5 py-2 !rounded-full text-sm font-semibold transition !no-underline hover:bg-gradient-to-r hover:from-orange-600 hover:via-[#FFBE8A] hover:to-[#4DA7AF]"}>
+      Login
+    </Link>
+  );
 
   return (
     <>
@@ -344,14 +429,28 @@ const Nav = () => {
                     </span>
                   )}
                 </Link>
-                <Link
-                  to="/login"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center justify-center gap-2 rounded-xl bg-white/45 px-4 py-3 !no-underline text-center text-lg font-semibold text-black transition hover:text-orange-600"
-                >
-                  <User size={20} />
-                  Login
-                </Link>
+                {currentUser ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      handleProfileOpen();
+                    }}
+                    className="flex items-center justify-center gap-2 rounded-xl bg-white/45 px-4 py-3 text-center text-lg font-semibold text-black transition hover:text-orange-600"
+                  >
+                    <User size={20} />
+                    {currentUser.name}
+                  </button>
+                ) : (
+                  <Link
+                    to="/login"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center justify-center gap-2 rounded-xl bg-white/45 px-4 py-3 !no-underline text-center text-lg font-semibold text-black transition hover:text-orange-600"
+                  >
+                    <User size={20} />
+                    Login
+                  </Link>
+                )}
               </div>
             </nav>
           </div>
@@ -416,9 +515,7 @@ const Nav = () => {
 
             {/* User + Login */}
             <div className="flex items-center gap-3 md:gap-4">
-              <Link to="/login" className="bg-orange-600 text-white px-5 py-2 !rounded-full text-sm font-semibold transition !no-underline hover:bg-gradient-to-r hover:from-orange-600 hover:via-[#FFBE8A] hover:to-[#4DA7AF]">
-                Login
-              </Link>
+              {profileButton()}
             </div>
 
           </div>
@@ -465,6 +562,90 @@ const Nav = () => {
                 care@venkateshwaratextiles.in
               </a>
             </div>
+          </div>
+        </div>
+      )}
+
+      {profileOpen && currentUser && (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/35 px-4 backdrop-blur-sm">
+          <div
+            className="relative w-full max-w-md rounded-2xl border border-white/40 p-6 text-slate-900 shadow-2xl"
+            style={{
+              background:
+                "linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,243,230,0.86) 52%, rgba(225,251,248,0.86) 100%)",
+              backdropFilter: "blur(14px)",
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => setProfileOpen(false)}
+              className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-white/70 text-slate-700 transition hover:bg-orange-500 hover:text-white"
+            >
+              <X size={18} />
+            </button>
+            <div className="mb-5 flex items-center gap-3 pr-10">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-orange-600 text-white">
+                <User size={22} />
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold text-[#1a0a00]">{currentUser.name}</h3>
+                <p className="text-sm font-semibold text-slate-600">{currentUser.email}</p>
+              </div>
+            </div>
+
+            <form onSubmit={handleProfileUpdate} className="space-y-4">
+              <label className="block">
+                <span className="mb-2 block text-sm font-bold text-slate-800">Name</span>
+                <input
+                  required
+                  value={profileForm.name}
+                  onChange={(event) => setProfileForm((form) => ({ ...form, name: event.target.value }))}
+                  className="h-11 w-full rounded-full bg-white/75 px-4 text-sm font-semibold outline-none ring-1 ring-black/10 transition focus:ring-2 focus:ring-orange-300"
+                />
+              </label>
+              <label className="block">
+                <span className="mb-2 block text-sm font-bold text-slate-800">Phone</span>
+                <input
+                  value={profileForm.phone}
+                  onChange={(event) => setProfileForm((form) => ({ ...form, phone: event.target.value }))}
+                  className="h-11 w-full rounded-full bg-white/75 px-4 text-sm font-semibold outline-none ring-1 ring-black/10 transition focus:ring-2 focus:ring-orange-300"
+                />
+              </label>
+              <div className="rounded-xl bg-white/60 p-3 text-sm font-semibold text-slate-700">
+                <p>Email: {currentUser.email}</p>
+                <p>Role: {currentUser.role}</p>
+              </div>
+
+              {profileError && (
+                <p className="rounded-xl bg-red-50 px-4 py-3 text-sm font-bold text-red-700">
+                  {profileError}
+                </p>
+              )}
+              {profileMessage && (
+                <p className="rounded-xl bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-700">
+                  {profileMessage}
+                </p>
+              )}
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <button
+                  type="submit"
+                  disabled={isProfileSaving}
+                  className="flex h-11 items-center justify-center gap-2 rounded-full bg-orange-600 px-4 text-sm font-bold text-white transition hover:bg-[#4DA7AF] disabled:cursor-not-allowed disabled:opacity-70"
+                >
+                  <Save size={17} />
+                  {isProfileSaving ? "Saving..." : "Update"}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="flex h-11 items-center justify-center gap-2 rounded-full bg-slate-900 px-4 text-sm font-bold text-white transition hover:bg-red-600"
+                >
+                  <LogOut size={17} />
+                  Logout
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

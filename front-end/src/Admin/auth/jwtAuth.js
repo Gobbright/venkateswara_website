@@ -1,4 +1,5 @@
 const TOKEN_KEY = "svfs_admin_jwt";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 export const ADMIN_USERS = [
   {
@@ -35,46 +36,45 @@ export const hasAdminAccess = (user, permission) =>
 
 export const getAdminStartPath = (user) => user?.startPath || "/admin";
 
-const createMockJwt = (payload) => {
-  const header = { alg: "HS256", typ: "JWT" };
-  const encodedHeader = btoa(JSON.stringify(header));
-  const encodedPayload = btoa(JSON.stringify(payload));
-
-  return `${encodedHeader}.${encodedPayload}.mock-signature`;
-};
-
-const readMockJwt = (token) => {
+const readJwt = (token) => {
   try {
     const [, payload] = token.split(".");
-    return JSON.parse(atob(payload));
+    const base64 = payload.replace(/-/g, "+").replace(/_/g, "/");
+    const paddedBase64 = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), "=");
+    return JSON.parse(atob(paddedBase64));
   } catch {
     return null;
   }
 };
 
-export const loginAdmin = ({ email, password }) => {
-  const normalizedEmail = email.trim().toLowerCase();
-  const adminUser = ADMIN_USERS.find(
-    (user) => user.email === normalizedEmail && user.password === password
-  );
+export const fetchDemoAdmins = async () => {
+  const response = await fetch(`${API_BASE_URL}/auth/demo-admins`);
+  const result = await response.json();
 
-  if (!adminUser) {
-    return { ok: false, token: "" };
+  if (!response.ok) {
+    throw new Error(result.message || "Demo admin users load panna mudiyala");
   }
 
-  const token = createMockJwt({
-    email: adminUser.email,
-    name: adminUser.name,
-    role: adminUser.role,
-    label: adminUser.label,
-    permissions: adminUser.permissions,
-    startPath: adminUser.startPath,
-    issuedAt: Date.now(),
+  return result.data;
+};
+
+export const loginAdmin = async ({ email, password }) => {
+  const response = await fetch(`${API_BASE_URL}/auth/admin/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password }),
   });
+  const result = await response.json();
+
+  if (!response.ok) {
+    return { ok: false, token: "", message: result.message };
+  }
+
+  const token = result.token;
 
   localStorage.setItem(TOKEN_KEY, token);
 
-  return { ok: true, token };
+  return { ok: true, token, user: result.user };
 };
 
 export const getAdminSession = () => {
@@ -84,9 +84,9 @@ export const getAdminSession = () => {
     return null;
   }
 
-  const payload = readMockJwt(token);
+  const payload = readJwt(token);
 
-  const knownUser = ADMIN_USERS.some((user) => user.role === payload?.role);
+  const knownUser = payload?.role && payload.role !== "customer";
 
   if (!knownUser || !Array.isArray(payload?.permissions)) {
     localStorage.removeItem(TOKEN_KEY);

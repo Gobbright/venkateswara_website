@@ -14,6 +14,12 @@ npm run dev
 ## API
 
 - `GET /api/health` - server and database status
+- `GET /api/auth/demo-admins` - list seeded demo admin users
+- `POST /api/auth/register` - register customer in MongoDB
+- `POST /api/auth/login` - customer login from MongoDB
+- `POST /api/auth/admin/login` - admin login from MongoDB
+- `GET /api/auth/me` - get logged-in user profile
+- `PUT /api/auth/me` - update logged-in user name and phone
 - `GET /api/products` - list products
 - `POST /api/products` - create product
 - `GET /api/categories` - list categories

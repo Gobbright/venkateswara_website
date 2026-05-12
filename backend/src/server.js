@@ -1,6 +1,7 @@
 import dotenv from "dotenv";
 import app from "./app.js";
 import connectDB from "./config/db.js";
+import { seedAdminUsers } from "./seed/auth/adminUsers.js";
 
 dotenv.config();
 
@@ -8,6 +9,7 @@ const PORT = process.env.PORT || 5000;
 
 const startServer = async () => {
   await connectDB();
+  await seedAdminUsers();
 
   app.listen(PORT, () => {
     console.log(`Backend running on port ${PORT}`);

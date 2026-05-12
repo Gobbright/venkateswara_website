@@ -1,0 +1,18 @@
+use venkateswara_shop
+
+db.users.deleteMany({
+  $or: [
+    { database: { $exists: true } },
+    { importantRule: { $exists: true } },
+    { userCollectionSchema: { $exists: true } },
+    { demoUsersToSeedInDatabase: { $exists: true } },
+    { registerDataStoreFlow: { $exists: true } },
+    { loginCheckFlow: { $exists: true } },
+    { backendCodeMap: { $exists: true } },
+    { frontendCodeMap: { $exists: true } },
+    { mongoshQueries: { $exists: true } },
+    { testSteps: { $exists: true } }
+  ]
+})
+
+db.users.find().pretty()
