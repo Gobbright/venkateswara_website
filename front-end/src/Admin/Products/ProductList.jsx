@@ -24,6 +24,20 @@ const statusStyles = {
   "Low Stock": "bg-orange-50 text-orange-700",
 };
 
+const taxOptions = ["0", "5", "12", "18", "28"];
+const sizeOptions = ["S", "M", "L", "XL"];
+
+const calculateDiscountedPrice = (price, discount) => {
+  const priceValue = Number(price || 0);
+  const discountValue = Number(discount || 0);
+
+  if (!priceValue || !discountValue) {
+    return priceValue;
+  }
+
+  return Math.max(0, Math.round(priceValue - (priceValue * discountValue) / 100));
+};
+
 const fileToDataUrl = (file) =>
   new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -75,7 +89,10 @@ export default function ProductList() {
 
   const startEdit = (product) => {
     setEditingId(product.id);
-    setEditForm({ ...product });
+    setEditForm({
+      ...product,
+      price: product.originalPrice ?? product.price,
+    });
     setMessage("");
   };
 
@@ -106,8 +123,13 @@ export default function ProductList() {
             ...product,
             ...editForm,
             name: editForm.name.trim(),
-            price: Number(editForm.price),
+            originalPrice: Number(editForm.price),
+            price: calculateDiscountedPrice(editForm.price, editForm.discount),
             stock: Number(editForm.stock),
+            tax: Number(editForm.tax || 0),
+            size: editForm.size || "M",
+            discount: editForm.discount === "" ? 0 : Number(editForm.discount || 0),
+            hsn: editForm.hsn?.trim() || "",
           }
         : product
     );
@@ -147,6 +169,7 @@ export default function ProductList() {
 
   const activeEditCategory = editForm?.category ?? categories[0].name;
   const activeEditCategoryData = categories.find((category) => category.name === activeEditCategory) ?? categories[0];
+  const editSellingPrice = editForm ? calculateDiscountedPrice(editForm.price, editForm.discount) : 0;
 
   return (
     <div>
@@ -198,7 +221,7 @@ export default function ProductList() {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[980px] text-left">
+          <table className="w-full min-w-[1240px] text-left">
             <thead>
               <tr className="border-b border-slate-100 text-xs uppercase tracking-[0.12em] text-slate-400">
                 <th className="px-5 py-4 font-extrabold">Image</th>
@@ -207,6 +230,10 @@ export default function ProductList() {
                 <th className="px-5 py-4 font-extrabold">Category</th>
                 <th className="px-5 py-4 font-extrabold">Subcategory</th>
                 <th className="px-5 py-4 font-extrabold">Price</th>
+                <th className="px-5 py-4 font-extrabold">Tax</th>
+                <th className="px-5 py-4 font-extrabold">Size</th>
+                <th className="px-5 py-4 font-extrabold">Discount</th>
+                <th className="px-5 py-4 font-extrabold">HSN</th>
                 <th className="px-5 py-4 font-extrabold">Stock</th>
                 <th className="px-5 py-4 font-extrabold">Status</th>
                 {activeView === "deleted" && <th className="px-5 py-4 font-extrabold">Deleted At</th>}
@@ -229,7 +256,20 @@ export default function ProductList() {
                   <td className="px-5 py-4 font-semibold text-slate-700">{product.name}</td>
                   <td className="px-5 py-4 font-semibold text-slate-600">{product.category}</td>
                   <td className="px-5 py-4 font-semibold text-slate-600">{product.subcategory}</td>
-                  <td className="px-5 py-4 font-extrabold text-[#23777f]">Rs. {Number(product.price).toLocaleString("en-IN")}</td>
+                  <td className="px-5 py-4">
+                    <p className="font-extrabold text-[#23777f]">
+                      Rs. {Number(product.price).toLocaleString("en-IN")}
+                    </p>
+                    {product.originalPrice && Number(product.originalPrice) !== Number(product.price) && (
+                      <p className="text-xs font-semibold text-slate-400 line-through">
+                        Rs. {Number(product.originalPrice).toLocaleString("en-IN")}
+                      </p>
+                    )}
+                  </td>
+                  <td className="px-5 py-4 font-semibold text-slate-600">{Number(product.tax || 0)}%</td>
+                  <td className="px-5 py-4 font-semibold text-slate-600">{product.size || "-"}</td>
+                  <td className="px-5 py-4 font-semibold text-slate-600">{Number(product.discount || 0)}%</td>
+                  <td className="px-5 py-4 font-semibold text-slate-600">{product.hsn || "-"}</td>
                   <td className="px-5 py-4 font-semibold text-slate-600">{product.stock}</td>
                   <td className="px-5 py-4">
                     <span className={`rounded-full px-3 py-1 text-xs font-extrabold ${statusStyles[product.status]}`}>
@@ -267,7 +307,7 @@ export default function ProductList() {
               ))}
               {visibleProducts.length === 0 && (
                 <tr>
-                  <td colSpan={activeView === "deleted" ? 10 : 9} className="px-5 py-10 text-center text-sm font-bold text-slate-500">
+                  <td colSpan={activeView === "deleted" ? 14 : 13} className="px-5 py-10 text-center text-sm font-bold text-slate-500">
                     {emptyMessage}
                   </td>
                 </tr>
@@ -361,7 +401,7 @@ export default function ProductList() {
                   min="1"
                   onChange={(event) => updateEditField("price", event.target.value)}
                   className="h-12 rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold outline-none focus:border-[#4DA7AF] focus:bg-white"
-                  placeholder="Price"
+                  placeholder="Original Price"
                 />
                 <input
                   value={editForm.stock}
@@ -379,6 +419,50 @@ export default function ProductList() {
                   <option>Active</option>
                   <option>Low Stock</option>
                 </select>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-4">
+                <select
+                  value={editForm.tax ?? "0"}
+                  onChange={(event) => updateEditField("tax", event.target.value)}
+                  className="h-12 rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold outline-none focus:border-[#4DA7AF] focus:bg-white"
+                >
+                  {taxOptions.map((tax) => (
+                    <option key={tax} value={tax}>
+                      Tax {tax}%
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={editForm.size || "M"}
+                  onChange={(event) => updateEditField("size", event.target.value)}
+                  className="h-12 rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold outline-none focus:border-[#4DA7AF] focus:bg-white"
+                >
+                  {sizeOptions.map((size) => (
+                    <option key={size} value={size}>
+                      Size {size}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  value={editForm.discount ?? ""}
+                  type="number"
+                  min="0"
+                  onChange={(event) => updateEditField("discount", event.target.value)}
+                  className="h-12 rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold outline-none focus:border-[#4DA7AF] focus:bg-white"
+                  placeholder="Discount %"
+                />
+                <input
+                  value={editForm.hsn ?? ""}
+                  onChange={(event) => updateEditField("hsn", event.target.value)}
+                  className="h-12 rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold outline-none focus:border-[#4DA7AF] focus:bg-white"
+                  placeholder="HSN Code"
+                />
+              </div>
+              <div className="rounded-2xl border border-[#4DA7AF]/20 bg-[#e9fbfc] px-4 py-3">
+                <p className="text-xs font-extrabold uppercase tracking-[0.12em] text-[#23777f]">Selling Price</p>
+                <p className="mt-1 text-xl font-extrabold text-slate-950">
+                  Rs. {editSellingPrice.toLocaleString("en-IN")}
+                </p>
               </div>
               <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:justify-end">
                 <button

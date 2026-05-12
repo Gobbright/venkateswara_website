@@ -1,80 +1,87 @@
 import { useNavigate } from "react-router-dom";
-import { BarChart3, Boxes, PackageCheck, ShoppingCart } from "lucide-react";
-import { orders, topProducts } from "../data/adminData";
-
-const overviewCards = [
-  { label: "Overall Orders", value: orders.length, icon: ShoppingCart },
-  {
-    label: "Packed Orders",
-    value: orders.filter((order) => order.status === "Packed").length,
-    icon: PackageCheck,
-  },
-  { label: "Top Products", value: topProducts.length, icon: Boxes },
-  { label: "Revenue", value: "Rs. 11.4k", icon: BarChart3 },
-];
+import { FolderTree, PackagePlus, PhoneCall, ShoppingCart, Users } from "lucide-react";
+import { categories, orders, users, videoCalls } from "../data/adminData";
+import { getStoredProducts } from "../utils/productStore";
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const overviewActions = [
+    { label: "Orders", value: orders.length, path: "/admin/orders", icon: ShoppingCart },
+    { label: "Categorys", value: categories.length, path: "/admin/category", icon: FolderTree },
+    { label: "Products", value: getStoredProducts().length, path: "/admin/products", icon: PackagePlus },
+    { label: "Users", value: users.length, path: "/admin/users", icon: Users },
+    { label: "Video Call Schedule", value: videoCalls.length, path: "/admin/video-calls", icon: PhoneCall },
+  ];
+  const newOrders = orders.slice(0, 5);
 
   return (
-    <div>
-      <section className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm md:p-8">
-        <div className="grid gap-6 lg:grid-cols-[1fr_280px] lg:items-center">
-          <div>
-            <h2 className="text-3xl font-extrabold leading-tight text-slate-950 md:text-4xl">
-              Store Admin Dashboard
-            </h2>
-            <p className="mt-3 max-w-2xl text-sm font-semibold leading-6 text-slate-500">
-              Orders, categories, and top products visual a manage panna clean admin panel.
-            </p>
-          </div>
-          <div className="grid gap-3">
-            <button
-              type="button"
-              onClick={() => navigate("/admin/orders")}
-              className="rounded-2xl bg-[#4DA7AF] px-5 py-3 text-sm font-extrabold text-white transition hover:bg-[#23777f]"
-            >
-              View Orders
-            </button>
-            <button
-              type="button"
-              onClick={() => navigate("/admin/products/add")}
-              className="rounded-2xl bg-orange-100 px-5 py-3 text-sm font-extrabold text-orange-700 transition hover:bg-orange-600 hover:text-white"
-            >
-              Add Top Product
-            </button>
-          </div>
-        </div>
-      </section>
+    <div className="min-h-[calc(100vh-7rem)]">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+        {overviewActions.map((action) => {
+          const Icon = action.icon;
 
-      <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {overviewCards.map(({ label, value, icon: Icon }) => (
-          <div key={label} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#e9fbfc] text-[#23777f]">
-              <Icon size={22} />
-            </div>
-            <h3 className="text-3xl font-extrabold text-slate-950">{value}</h3>
-            <p className="mt-1 text-sm font-bold text-slate-500">{label}</p>
-          </div>
-        ))}
-      </section>
-
-      <section className="mt-6 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-        <h3 className="mb-4 text-lg font-extrabold text-slate-950">Recent Order Status</h3>
-        <div className="grid gap-3 md:grid-cols-2">
-          {orders.slice(0, 4).map((order) => (
-            <div key={order.id} className="flex items-center justify-between gap-4 rounded-2xl bg-slate-50 p-4">
-              <div>
-                <h4 className="text-sm font-extrabold text-slate-950">{order.product}</h4>
-                <p className="text-xs font-bold text-slate-500">
-                  {order.id} / {order.category}
-                </p>
-              </div>
-              <span className="rounded-full bg-[#e9fbfc] px-3 py-1 text-xs font-extrabold text-[#23777f]">
-                {order.status}
+          return (
+            <button
+              key={action.label}
+              type="button"
+              onClick={() => navigate(action.path)}
+              className="flex h-32 flex-col items-start justify-center rounded-2xl border border-slate-200 bg-white px-5 text-left shadow-sm transition hover:border-[#4DA7AF] hover:bg-[#e9fbfc]"
+            >
+              <span className="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl bg-[#e9fbfc] text-[#23777f]">
+                <Icon size={21} />
               </span>
-            </div>
-          ))}
+              <span className="mt-1 text-sm font-extrabold text-slate-600">{action.label}</span>
+              <span className="text-3xl font-extrabold text-slate-950">{action.value}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      <section className="mt-6 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+        <div className="flex items-center justify-between gap-4 border-b border-slate-100 px-5 py-4">
+          <h2 className="text-lg font-extrabold text-slate-950">New Orders</h2>
+          <button
+            type="button"
+            onClick={() => navigate("/admin/orders")}
+            className="rounded-full bg-[#e9fbfc] px-4 py-2 text-xs font-extrabold text-[#23777f] transition hover:bg-[#4DA7AF] hover:text-white"
+          >
+            View All
+          </button>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[760px] text-left">
+            <thead>
+              <tr className="border-b border-slate-100 text-xs uppercase tracking-[0.12em] text-slate-400">
+                <th className="px-5 py-4 font-extrabold">Order ID</th>
+                <th className="px-5 py-4 font-extrabold">Customer</th>
+                <th className="px-5 py-4 font-extrabold">Product</th>
+                <th className="px-5 py-4 font-extrabold">Amount</th>
+                <th className="px-5 py-4 font-extrabold">Status</th>
+                <th className="px-5 py-4 font-extrabold">Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {newOrders.map((order) => (
+                <tr key={order.id} className="border-b border-slate-100 text-sm last:border-b-0">
+                  <td className="px-5 py-4 font-extrabold text-slate-950">{order.id}</td>
+                  <td className="px-5 py-4 font-semibold text-slate-700">{order.customer}</td>
+                  <td className="px-5 py-4 font-semibold text-slate-600">{order.product}</td>
+                  <td className="px-5 py-4 font-extrabold text-[#23777f]">
+                    Rs. {Number(order.amount).toLocaleString("en-IN")}
+                  </td>
+                  <td className="px-5 py-4">
+                    <span className="rounded-full bg-orange-50 px-3 py-1 text-xs font-extrabold text-orange-700">
+                      {order.status}
+                    </span>
+                  </td>
+                  <td className="px-5 py-4 font-semibold text-slate-600">
+                    {order.date} / {order.time}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </section>
     </div>

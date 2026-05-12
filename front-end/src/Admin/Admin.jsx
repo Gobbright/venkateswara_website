@@ -42,13 +42,17 @@ export default function Admin() {
     navigate("/admin", { replace: true });
   };
 
+  const handleUserUpdate = (nextSession) => {
+    setSession(nextSession);
+  };
+
   if (!session) {
     return <AdminLogin onLogin={handleLogin} />;
   }
 
   return (
     <Routes>
-      <Route element={<AdminLayout onLogout={handleLogout} user={session.user} />}>
+      <Route element={<AdminLayout onLogout={handleLogout} onUserUpdate={handleUserUpdate} user={session.user} />}>
         <Route index element={<Navigate to={getAdminStartPath(session.user).replace("/admin/", "")} replace />} />
         <Route path="dashboard" element={<ProtectedAdminRoute user={session.user} permission="dashboard"><Dashboard /></ProtectedAdminRoute>} />
         <Route path="orders" element={<ProtectedAdminRoute user={session.user} permission="orders"><Orders /></ProtectedAdminRoute>} />
