@@ -1,0 +1,7 @@
+<svg width="260" height="96" viewBox="0 0 260 96" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="260" height="96" rx="18" fill="#FFF8F0"/>
+  <path d="M35 62c14-30 24-30 38 0H60l-6-14-6 14H35Z" fill="#A16207"/>
+  <path d="M52 26c10 8 17 18 21 31H62c-3-8-6-14-10-20-4 6-7 12-10 20H31c4-13 11-23 21-31Z" fill="#EAB308"/>
+  <text x="92" y="44" fill="#6B2E16" font-family="Arial, sans-serif" font-size="21" font-weight="800">The Chennai</text>
+  <text x="92" y="67" fill="#9A3412" font-family="Arial, sans-serif" font-size="21" font-weight="800">Silks</text>
+</svg>

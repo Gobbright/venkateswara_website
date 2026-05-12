@@ -1,0 +1,7 @@
+<svg width="250" height="96" viewBox="0 0 250 96" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="250" height="96" rx="18" fill="#FFF8F0"/>
+  <path d="M31 30h48v36H31z" fill="#7C3AED"/>
+  <path d="M43 59V37h8v8l10-8h11L59 48l14 11H61l-10-8v8h-8Z" fill="#FFF8F0"/>
+  <text x="96" y="46" fill="#4C1D95" font-family="Arial, sans-serif" font-size="25" font-weight="900">Kalyan</text>
+  <text x="96" y="68" fill="#6D28D9" font-family="Arial, sans-serif" font-size="20" font-weight="800">Silks</text>
+</svg>

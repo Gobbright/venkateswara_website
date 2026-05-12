@@ -1,0 +1,6 @@
+<svg width="240" height="96" viewBox="0 0 240 96" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="240" height="96" rx="18" fill="#FFF8F0"/>
+  <rect x="31" y="30" width="48" height="36" rx="8" fill="#166534"/>
+  <path d="M42 57V39h15c6 0 10 3 10 8 0 3-2 6-5 7l7 3H58l-6-5h-2v5h-8Zm8-11h7c1 0 2-1 2-2s-1-2-2-2h-7v4Z" fill="#FFF8F0"/>
+  <text x="94" y="58" fill="#14532D" font-family="Arial, sans-serif" font-size="34" font-weight="900">RMKV</text>
+</svg>
