@@ -1,9 +1,13 @@
 import dotenv from "dotenv";
+import { dirname, resolve } from "path";
+import { fileURLToPath } from "url";
 import app from "./app.js";
 import connectDB from "./config/db.js";
 import { seedAdminUsers } from "./seed/auth/adminUsers.js";
 
-dotenv.config();
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+dotenv.config({ path: resolve(__dirname, "../.env") });
 
 const PORT = process.env.PORT || 5000;
 

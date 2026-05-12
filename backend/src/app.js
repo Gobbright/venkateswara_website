@@ -5,6 +5,7 @@ import authRoutes from "./routes/auth/authRoutes.js";
 import categoryRoutes from "./routes/categoryRoutes.js";
 import enquiryRoutes from "./routes/enquiryRoutes.js";
 import productRoutes from "./routes/productRoutes.js";
+import videocallScheduleRoutes from "./routes/videocall/videocallScheduleRoutes.js";
 import { notFound, errorHandler } from "./middleware/errorMiddleware.js";
 
 const app = express();
@@ -23,6 +24,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/enquiries", enquiryRoutes);
 app.use("/api/products", productRoutes);
+app.use("/api/videocall-schedules", videocallScheduleRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

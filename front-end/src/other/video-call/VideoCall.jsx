@@ -36,6 +36,8 @@ const callOptions = [
   },
 ];
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+
 const formatDateValue = (date) => {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -86,6 +88,14 @@ const VideoCall = () => {
   const [calendarMonth, setCalendarMonth] = useState(() => parseDateValue(today));
   const [selectedTime, setSelectedTime] = useState("10:00 AM");
   const [selectedOption, setSelectedOption] = useState("whatsapp");
+  const [form, setForm] = useState({
+    name: "",
+    phone: "",
+    category: "",
+    product: "",
+  });
+  const [submitStatus, setSubmitStatus] = useState("idle");
+  const [message, setMessage] = useState("");
   const selectedCall = callOptions.find((option) => option.id === selectedOption);
   const calendarYear = calendarMonth.getFullYear();
   const calendarMonthIndex = calendarMonth.getMonth();
@@ -110,6 +120,49 @@ const VideoCall = () => {
       next.setMonth(current.getMonth() + amount);
       return next;
     });
+  };
+
+  const updateField = (field, value) => {
+    setForm((current) => ({ ...current, [field]: value }));
+    setMessage("");
+  };
+
+  const scheduleCall = async () => {
+    if (!form.name.trim() || !form.phone.trim() || !selectedDate || !selectedTime || !selectedCall) {
+      setMessage("Name, phone, date, time fill pannunga.");
+      return;
+    }
+
+    setSubmitStatus("loading");
+    setMessage("");
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/videocall-schedules`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: form.name,
+          phone: form.phone,
+          category: form.category,
+          product: form.product,
+          date: selectedDate,
+          time: selectedTime,
+          callType: selectedCall.title,
+        }),
+      });
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || "Schedule save panna mudiyala.");
+      }
+
+      setForm({ name: "", phone: "", category: "", product: "" });
+      setSubmitStatus("success");
+      setMessage("Video call scheduled successfully.");
+    } catch (error) {
+      setSubmitStatus("error");
+      setMessage(error.message || "Backend running nu check pannunga.");
+    }
   };
 
   return (
@@ -307,11 +360,49 @@ const VideoCall = () => {
                 ))}
               </div>
             </div>
+
+            <div className="mt-8">
+              <h2 className="mb-4 text-2xl font-bold text-gray-900">Purchase Details</h2>
+              <div className="grid gap-4 md:grid-cols-2">
+                <input
+                  value={form.name}
+                  onChange={(event) => updateField("name", event.target.value)}
+                  className="h-12 rounded-full border border-orange-200 bg-orange-50 px-5 text-base font-semibold outline-none transition focus:border-orange-500 focus:bg-white"
+                  placeholder="Customer Name"
+                />
+                <input
+                  value={form.phone}
+                  onChange={(event) => updateField("phone", event.target.value)}
+                  className="h-12 rounded-full border border-orange-200 bg-orange-50 px-5 text-base font-semibold outline-none transition focus:border-orange-500 focus:bg-white"
+                  placeholder="Phone Number"
+                />
+                <input
+                  value={form.category}
+                  onChange={(event) => updateField("category", event.target.value)}
+                  className="h-12 rounded-full border border-orange-200 bg-orange-50 px-5 text-base font-semibold outline-none transition focus:border-orange-500 focus:bg-white"
+                  placeholder="Category"
+                />
+                <input
+                  value={form.product}
+                  onChange={(event) => updateField("product", event.target.value)}
+                  className="h-12 rounded-full border border-orange-200 bg-orange-50 px-5 text-base font-semibold outline-none transition focus:border-orange-500 focus:bg-white"
+                  placeholder="Product / Purchase Details"
+                />
+              </div>
+            </div>
           </div>
 
           <aside className="rounded-2xl bg-white p-6 shadow-[0_4px_20px_rgba(0,0,0,0.06)] lg:sticky lg:top-[150px] lg:self-start">
             <h2 className="text-2xl font-bold text-gray-900">Appointment Summary</h2>
             <div className="mt-6 space-y-4 text-base font-medium text-gray-700">
+              <div className="flex items-center justify-between gap-4">
+                <span>Name</span>
+                <span className="text-right font-bold text-gray-950">{form.name || "-"}</span>
+              </div>
+              <div className="flex items-center justify-between gap-4">
+                <span>Phone</span>
+                <span className="font-bold text-gray-950">{form.phone || "-"}</span>
+              </div>
               <div className="flex items-center justify-between gap-4">
                 <span>Date</span>
                 <span className="font-bold text-gray-950">{selectedDate}</span>
@@ -340,11 +431,20 @@ const VideoCall = () => {
 
             <button
               type="button"
+              onClick={scheduleCall}
+              disabled={submitStatus === "loading"}
               className="mt-5 flex h-12 w-full items-center justify-center gap-2 rounded-full bg-orange-600 px-5 text-base font-semibold text-white transition hover:scale-[1.03] hover:bg-gradient-to-r hover:from-orange-600 hover:via-[#FFBE8A] hover:to-[#4DA7AF]"
             >
-              Schedule Call
+              {submitStatus === "loading" ? "Scheduling..." : "Schedule Call"}
               <Video size={18} />
             </button>
+            {message && (
+              <p className={`mt-3 rounded-2xl px-4 py-3 text-sm font-bold ${
+                submitStatus === "success" ? "bg-green-50 text-green-700" : "bg-orange-50 text-orange-700"
+              }`}>
+                {message}
+              </p>
+            )}
           </aside>
         </div>
       </div>
