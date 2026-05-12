@@ -1,0 +1,129 @@
+[{
+  "_id": {
+    "$oid": "6a0302a086997911f5f1265c"
+  },
+  "name": "Support Viewer",
+  "email": "support@gobrightglobal.com",
+  "password": "120000:2494e04fcabf466c7b26236ded6b8dd7:8c4d4b55086bcc4b18e85d5b2766854977c75632e0bdf28082626016a220d3055afe9626907ef62b164bf2de505b2e41bcaee09b2022f6edc4ddb726b8ec10d4",
+  "role": "support_viewer",
+  "access": [
+    "users",
+    "video_calls",
+    "enquiries_view"
+  ],
+  "jwtAuth": true,
+  "status": 1,
+  "createdAt": {
+    "$date": "2026-05-12T10:36:16.541Z"
+  },
+  "updatedAt": {
+    "$date": "2026-05-12T10:36:16.541Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6a0302a086997911f5f1265f"
+  },
+  "name": "Main Admin",
+  "email": "admin@gobrightglobal.com",
+  "password": "120000:a9c15f22a8a20a77a1ede6866165e2fc:5701a94019a7c53fc5a27d7a477b1b19291527ecf35bf19a7ffa645dea59ffcdff72d41e347fd650355688eb9f7d4efb970c1a40ef74120b5ea451914312a110",
+  "role": "main_admin",
+  "access": "All Access",
+  "jwtAuth": true,
+  "status": 1,
+  "createdAt": {
+    "$date": "2026-05-12T10:36:16.725Z"
+  },
+  "updatedAt": {
+    "$date": "2026-05-12T10:36:16.725Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6a0302a086997911f5f1265a"
+  },
+  "name": "Orders Manager",
+  "email": "orders@gobrightglobal.com",
+  "password": "120000:c6f05475b2830fb5107e51db44a14419:d7cfb938fb3c8948af4281142e28d9f20e81094a757d5d7d52329fbbe31e775b98395ae0e099c0dac25e64be8da135d48183d569a0fb81e55331ecd5d3288b73",
+  "role": "orders_manager",
+  "access": [
+    "orders",
+    "category",
+    "product_list",
+    "product_add"
+  ],
+  "jwtAuth": true,
+  "status": 1,
+  "createdAt": {
+    "$date": "2026-05-12T10:36:16.436Z"
+  },
+  "updatedAt": {
+    "$date": "2026-05-12T10:36:16.436Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6a03103b9a8bad133f693afd"
+  },
+  "name": "Admin 2",
+  "email": "admin2@gmail.com",
+  "password": "120000:ca5f0e948a14245b17413baa26d5d2e5:62f6d28bc46fff62a6b1e8d225994f40e7fae69c8b088bc83841805826d6dccdbfe15fef7a40a753ad6614af36e198e75a89dca35020f0ec026b11c369de0c7a",
+  "role": "orders_manager",
+  "access": [
+    "orders",
+    "product_list",
+    "product_add"
+  ],
+  "jwtAuth": true,
+  "status": 1,
+  "createdAt": {
+    "$date": "2026-05-12T11:34:19.049Z"
+  },
+  "updatedAt": {
+    "$date": "2026-05-12T11:34:19.049Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6a03103b9a8bad133f693b00"
+  },
+  "name": "Admin 1",
+  "email": "admin1@gmail.com",
+  "password": "120000:312ea309e9a198200ec8ac7972ea255c:62006c0e189cb21265c54bc1818e3de59c1852b305bf7191faa1baa2b5f10e61022f4210b2304a4d9bdeb56f7760e50e6880ec98160deb4bb2602f0c381f5abc",
+  "role": "main_admin",
+  "access": "All Access",
+  "jwtAuth": true,
+  "status": 1,
+  "createdAt": {
+    "$date": "2026-05-12T11:34:19.173Z"
+  },
+  "updatedAt": {
+    "$date": "2026-05-12T11:34:19.173Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6a03103b9a8bad133f693b02"
+  },
+  "name": "Admin 3",
+  "email": "admin3@gmail.com",
+  "password": "120000:6650899a7b1dc128eacd8978b059f9ae:cafa93200d7c13618d99a29068a44d51e09544d170ef7e7890d608eacc3da44670ffeccb2f4048087110f1936d2e74467b658d865193005eb7c7f78abeb4f90d",
+  "role": "support_viewer",
+  "access": [
+    "enquiries_view"
+  ],
+  "jwtAuth": true,
+  "status": 1,
+  "createdAt": {
+    "$date": "2026-05-12T11:34:19.292Z"
+  },
+  "updatedAt": {
+    "$date": "2026-05-12T11:34:19.292Z"
+  },
+  "__v": 0
+}]
