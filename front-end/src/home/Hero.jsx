@@ -26,6 +26,7 @@ const heroSlides = [
         suffix: "Every Beautiful Moment",
         description: "Explore elegant sarees, kurtis, and festive styles designed with rich colors, soft textures, and a confident feminine finish.",
         align: "right",
+        contentOffset: "md:pr-12 lg:pr-20 xl:pr-28",
         position: "center center",
     },
     {
@@ -91,7 +92,7 @@ const Hero = () => {
 
             {/* Content */}
             <div
-                className={`relative z-10 flex h-full flex-col justify-end px-6 pt-14 pb-16 md:px-20 md:pt-32 md:pb-24 ${isRightAligned ? "ml-auto items-end text-right" : "items-start text-left"}`}
+                className={`relative z-10 flex h-full flex-col justify-end px-6 pt-14 pb-16 md:px-20 md:pt-32 md:pb-24 ${currentSlide.contentOffset || ""} ${isRightAligned ? "ml-auto items-end text-right" : "items-start text-left"}`}
             >
                 <div
                     key={activeSlide}

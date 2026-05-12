@@ -6,9 +6,9 @@ db.createCollection("adminusers")
 
 db.adminusers.insertMany([
   {
-    name: "Main Admin",
-    email: "admin@gobrightglobal.com",
-    password: "admin123",
+    name: "Admin 1",
+    email: "admin1@gmail.com",
+    password: "Admin@1",
     role: "main_admin",
     access: "All Access",
     jwtAuth: true,
@@ -16,13 +16,12 @@ db.adminusers.insertMany([
     createdAt: new Date()
   },
   {
-    name: "Orders Manager",
-    email: "orders@gobrightglobal.com",
-    password: "orders123",
+    name: "Admin 2",
+    email: "admin2@gmail.com",
+    password: "Admin@2",
     role: "orders_manager",
     access: [
       "orders",
-      "category",
       "product_list",
       "product_add"
     ],
@@ -31,13 +30,11 @@ db.adminusers.insertMany([
     createdAt: new Date()
   },
   {
-    name: "Support Viewer",
-    email: "support@gobrightglobal.com",
-    password: "support123",
+    name: "Admin 3",
+    email: "admin3@gmail.com",
+    password: "Admin@3",
     role: "support_viewer",
     access: [
-      "users",
-      "video_calls",
       "enquiries_view"
     ],
     jwtAuth: true,

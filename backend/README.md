@@ -15,6 +15,7 @@ npm run dev
 
 - `GET /api/health` - server and database status
 - `GET /api/auth/demo-admins` - list seeded demo admin users
+- `GET /api/auth/users` - list registered customer users
 - `POST /api/auth/register` - register customer in MongoDB
 - `POST /api/auth/login` - customer login from MongoDB
 - `POST /api/auth/admin/login` - admin login from MongoDB

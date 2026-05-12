@@ -1,19 +1,12 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { ArrowRight, LockKeyhole, Mail, ShieldCheck, Store } from "lucide-react";
-import { ADMIN_USERS, fetchDemoAdmins } from "../auth/jwtAuth";
+import { ADMIN_USERS } from "../auth/jwtAuth";
 
 export default function AdminLogin({ onLogin }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [demoAdmins, setDemoAdmins] = useState(ADMIN_USERS);
   const [isLoading, setIsLoading] = useState(false);
-
-  useEffect(() => {
-    fetchDemoAdmins()
-      .then(setDemoAdmins)
-      .catch(() => setDemoAdmins(ADMIN_USERS));
-  }, []);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -112,23 +105,17 @@ export default function AdminLogin({ onLogin }) {
 
           <div className="mt-5 rounded-2xl bg-slate-50 px-4 py-3">
             <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-slate-400">
-              Demo Logins
+              Admin Users
             </p>
             <div className="mt-3 grid gap-2">
-              {demoAdmins.map((user) => (
-                <button
+              {ADMIN_USERS.map((user) => (
+                <div
                   key={user.email}
-                  type="button"
-                  onClick={() => {
-                    setEmail(user.email);
-                    setPassword(ADMIN_USERS.find((adminUser) => adminUser.email === user.email)?.password || "");
-                    setError("");
-                  }}
-                  className="rounded-xl bg-white px-3 py-2 text-left text-xs font-bold text-slate-600 transition hover:bg-[#e9fbfc] hover:text-[#23777f]"
+                  className="rounded-xl bg-white px-3 py-2 text-xs font-bold text-slate-600"
                 >
                   <span className="block text-slate-900">{user.name} - {user.label}</span>
-                  {user.email}
-                </button>
+                  {user.email} / {user.password}
+                </div>
               ))}
             </div>
           </div>

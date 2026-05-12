@@ -1,6 +1,41 @@
-import { users } from "../data/adminData";
+import { useEffect, useState } from "react";
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 export default function Users() {
+  const [users, setUsers] = useState([]);
+  const [status, setStatus] = useState("loading");
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadUsers = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/auth/users`);
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.message || "Users load panna mudiyala.");
+        }
+
+        if (isMounted) {
+          setUsers(result.data || []);
+          setStatus("ready");
+        }
+      } catch {
+        if (isMounted) {
+          setStatus("error");
+        }
+      }
+    };
+
+    loadUsers();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   return (
     <div>
       <div className="mb-5">
@@ -19,23 +54,49 @@ export default function Users() {
                 <th className="px-5 py-4 font-extrabold">Name</th>
                 <th className="px-5 py-4 font-extrabold">Phone</th>
                 <th className="px-5 py-4 font-extrabold">Email</th>
-                <th className="px-5 py-4 font-extrabold">City</th>
-                <th className="px-5 py-4 font-extrabold">Orders</th>
+                <th className="px-5 py-4 font-extrabold">Joined</th>
                 <th className="px-5 py-4 font-extrabold">Status</th>
               </tr>
             </thead>
             <tbody>
-              {users.map((user) => (
-                <tr key={user.id} className="border-b border-slate-100 text-sm">
-                  <td className="px-5 py-4 font-extrabold text-slate-950">{user.id}</td>
+              {status === "loading" && (
+                <tr>
+                  <td colSpan="6" className="px-5 py-8 text-center text-sm font-bold text-slate-500">
+                    Users loading...
+                  </td>
+                </tr>
+              )}
+
+              {status === "error" && (
+                <tr>
+                  <td colSpan="6" className="px-5 py-8 text-center text-sm font-bold text-red-600">
+                    Users load panna mudiyala. Backend running nu check pannunga.
+                  </td>
+                </tr>
+              )}
+
+              {status === "ready" && users.length === 0 && (
+                <tr>
+                  <td colSpan="6" className="px-5 py-8 text-center text-sm font-bold text-slate-500">
+                    Innum registered users illa.
+                  </td>
+                </tr>
+              )}
+
+              {status === "ready" && users.map((user, index) => (
+                <tr key={user._id} className="border-b border-slate-100 text-sm">
+                  <td className="px-5 py-4 font-extrabold text-slate-950">
+                    USR-{String(index + 1).padStart(3, "0")}
+                  </td>
                   <td className="px-5 py-4 font-semibold text-slate-700">{user.name}</td>
-                  <td className="px-5 py-4 font-semibold text-slate-600">{user.phone}</td>
+                  <td className="px-5 py-4 font-semibold text-slate-600">{user.phone || "-"}</td>
                   <td className="px-5 py-4 font-semibold text-slate-600">{user.email}</td>
-                  <td className="px-5 py-4 font-semibold text-slate-600">{user.city}</td>
-                  <td className="px-5 py-4 font-extrabold text-[#23777f]">{user.orders}</td>
+                  <td className="px-5 py-4 font-semibold text-slate-600">
+                    {user.createdAt ? new Date(user.createdAt).toLocaleDateString("en-IN") : "-"}
+                  </td>
                   <td className="px-5 py-4">
                     <span className="rounded-full bg-[#e9fbfc] px-3 py-1 text-xs font-extrabold text-[#23777f]">
-                      {user.status}
+                      Active
                     </span>
                   </td>
                 </tr>

@@ -14,15 +14,15 @@ const adminRoleMap = {
   },
   orders_manager: {
     role: "orders-manager",
-    label: "Orders, category, product list, product add",
-    permissions: ["orders", "category", "products", "product-add"],
+    label: "Orders and products",
+    permissions: ["orders", "products", "product-add"],
     startPath: "/admin/orders",
   },
   support_viewer: {
     role: "support-viewer",
-    label: "Users, video calls, enquiries view",
-    permissions: ["users", "video-calls", "enquiries"],
-    startPath: "/admin/users",
+    label: "Enquiries view",
+    permissions: ["enquiries"],
+    startPath: "/admin/enquiries",
   },
 };
 
@@ -148,6 +148,14 @@ export const loginAdmin = asyncHandler(async (req, res) => {
   }
 
   sendAdminAuthResponse(res, adminUser);
+});
+
+export const getRegisteredUsers = asyncHandler(async (req, res) => {
+  const users = await User.find({ role: "customer" })
+    .select("-password")
+    .sort({ createdAt: -1 });
+
+  res.json({ success: true, data: users });
 });
 
 export const getProfile = asyncHandler(async (req, res) => {
