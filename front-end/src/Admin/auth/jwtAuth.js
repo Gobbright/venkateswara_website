@@ -96,6 +96,29 @@ export const getAdminSession = () => {
   return { token, user: payload };
 };
 
+export const updateAdminProfile = (profile) => {
+  const session = getAdminSession();
+
+  if (!session) {
+    return null;
+  }
+
+  const nextUser = {
+    ...session.user,
+    name: profile.name.trim(),
+    email: profile.email.trim().toLowerCase(),
+    label: profile.label.trim(),
+  };
+  const token = createMockJwt({
+    ...nextUser,
+    updatedAt: Date.now(),
+  });
+
+  localStorage.setItem(TOKEN_KEY, token);
+
+  return { token, user: nextUser };
+};
+
 export const logoutAdmin = () => {
   localStorage.removeItem(TOKEN_KEY);
 };
