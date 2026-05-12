@@ -10,3 +10,20 @@ git commit -m "updated"
 git push origin main
 
 git pull origin main
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ git pull origin main --rebase
