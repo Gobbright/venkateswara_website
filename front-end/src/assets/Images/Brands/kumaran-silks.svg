@@ -1,0 +1,7 @@
+<svg width="260" height="96" viewBox="0 0 260 96" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="260" height="96" rx="18" fill="#FFF8F0"/>
+  <rect x="30" y="29" width="48" height="38" rx="19" fill="#BE123C"/>
+  <path d="M43 60V36h9v9l10-9h11L60 48l14 12H62l-10-9v9h-9Z" fill="#FFF8F0"/>
+  <text x="94" y="45" fill="#881337" font-family="Arial, sans-serif" font-size="24" font-weight="900">Kumaran</text>
+  <text x="95" y="68" fill="#BE123C" font-family="Arial, sans-serif" font-size="20" font-weight="800">Silks</text>
+</svg>

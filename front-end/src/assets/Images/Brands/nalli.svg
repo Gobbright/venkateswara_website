@@ -1,0 +1,6 @@
+<svg width="240" height="96" viewBox="0 0 240 96" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="240" height="96" rx="18" fill="#FFF8F0"/>
+  <circle cx="48" cy="48" r="25" fill="#E8632A"/>
+  <path d="M38 61V35h8l17 26h-8L46 47v14h-8Z" fill="#FFF8F0"/>
+  <text x="86" y="57" fill="#6B2E16" font-family="Georgia, serif" font-size="32" font-weight="700">Nalli</text>
+</svg>

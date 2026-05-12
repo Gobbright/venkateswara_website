@@ -1,0 +1,8 @@
+<svg width="240" height="96" viewBox="0 0 240 96" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="240" height="96" rx="18" fill="#FFF8F0"/>
+  <circle cx="54" cy="48" r="26" fill="#F97316"/>
+  <path d="M41 48c7-12 19-12 26 0-7 12-19 12-26 0Z" fill="#FFF8F0"/>
+  <circle cx="54" cy="48" r="6" fill="#F97316"/>
+  <text x="92" y="46" fill="#7C2D12" font-family="Arial, sans-serif" font-size="24" font-weight="900">Ramraj</text>
+  <text x="94" y="67" fill="#7C2D12" font-family="Arial, sans-serif" font-size="17" font-weight="700">Cotton</text>
+</svg>
