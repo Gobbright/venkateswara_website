@@ -5,6 +5,7 @@ import Category from "./Category/Category";
 import Dashboard from "./Dashboard/Dashboard";
 import AdminLayout from "./Layout/AdminLayout";
 import AdminLogin from "./Login/AdminLogin";
+import Notifications from "./Notifications/Notifications";
 import Orders from "./Orders/Orders";
 import ProductAdd from "./Products/ProductAdd";
 import ProductList from "./Products/ProductList";
@@ -54,6 +55,7 @@ export default function Admin() {
     <Routes>
       <Route element={<AdminLayout onLogout={handleLogout} onUserUpdate={handleUserUpdate} user={session.user} />}>
         <Route index element={<Navigate to={getAdminStartPath(session.user).replace("/admin/", "")} replace />} />
+        <Route path="notifications" element={<Notifications />} />
         <Route path="dashboard" element={<ProtectedAdminRoute user={session.user} permission="dashboard"><Dashboard /></ProtectedAdminRoute>} />
         <Route path="orders" element={<ProtectedAdminRoute user={session.user} permission="orders"><Orders /></ProtectedAdminRoute>} />
         <Route path="orders/:status" element={<ProtectedAdminRoute user={session.user} permission="orders"><Orders /></ProtectedAdminRoute>} />

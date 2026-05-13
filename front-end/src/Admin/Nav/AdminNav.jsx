@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   ChevronDown,
+  Bell,
   FolderTree,
   LayoutDashboard,
   LogOut,
@@ -32,6 +33,7 @@ export default function AdminNav({ onLogout, onNavigate = () => {}, user }) {
   const isUsers = location.pathname.startsWith("/admin/users");
   const isVideoCalls = location.pathname.startsWith("/admin/video-calls");
   const isEnquiries = location.pathname.startsWith("/admin/enquiries");
+  const isNotifications = location.pathname.startsWith("/admin/notifications");
   const isDashboard = location.pathname === "/admin/dashboard";
   const canViewDashboard = hasAdminAccess(user, "dashboard");
   const canViewOrders = hasAdminAccess(user, "orders");
@@ -84,6 +86,11 @@ export default function AdminNav({ onLogout, onNavigate = () => {}, user }) {
             Overview
           </NavLink>
         )}
+
+        <NavLink to="/admin/notifications" onClick={onNavigate} className={navButtonClass(isNotifications)}>
+          <Bell size={18} />
+          Notifications
+        </NavLink>
 
         {canViewOrders && (
           <div className="rounded-3xl border border-slate-200 p-2">
