@@ -18,6 +18,21 @@ const enquirySchema = new mongoose.Schema(
       lowercase: true,
       default: "",
     },
+    category: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    productDetails: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    branch: {
+      type: String,
+      trim: true,
+      default: "",
+    },
     message: {
       type: String,
       trim: true,

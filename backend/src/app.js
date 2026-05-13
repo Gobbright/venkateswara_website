@@ -3,7 +3,7 @@ import cors from "cors";
 import healthRoutes from "./routes/healthRoutes.js";
 import authRoutes from "./routes/auth/authRoutes.js";
 import categoryRoutes from "./routes/categoryRoutes.js";
-import enquiryRoutes from "./routes/enquiryRoutes.js";
+import enquiryRoutes from "./routes/Enquiry_form/enquiryRoutes.js";
 import productRoutes from "./routes/productRoutes.js";
 import videocallScheduleRoutes from "./routes/videocall/videocallScheduleRoutes.js";
 import { notFound, errorHandler } from "./middleware/errorMiddleware.js";

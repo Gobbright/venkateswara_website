@@ -1,12 +1,46 @@
-import { enquiries } from "../data/adminData";
+import { useEffect, useState } from "react";
+import { apiRequest } from "../../utils/api";
 
 const statusStyles = {
   Open: "bg-yellow-50 text-yellow-700",
   Replied: "bg-blue-50 text-blue-700",
+  New: "bg-yellow-50 text-yellow-700",
+  Contacted: "bg-blue-50 text-blue-700",
   Closed: "bg-green-50 text-green-700",
 };
 
 export default function Enquiries() {
+  const [enquiries, setEnquiries] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const loadEnquiries = async () => {
+      try {
+        const result = await apiRequest("/enquiries");
+        setEnquiries(result.data || []);
+      } catch (fetchError) {
+        setError(fetchError.message || "Unable to load enquiries.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadEnquiries();
+  }, []);
+
+  const formatDate = (dateValue) => {
+    if (!dateValue) {
+      return "-";
+    }
+
+    return new Intl.DateTimeFormat("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    }).format(new Date(dateValue));
+  };
+
   return (
     <div>
       <div className="mb-5">
@@ -31,16 +65,42 @@ export default function Enquiries() {
               </tr>
             </thead>
             <tbody>
-              {enquiries.map((enquiry) => (
-                <tr key={enquiry.id} className="border-b border-slate-100 text-sm">
-                  <td className="px-5 py-4 font-extrabold text-slate-950">{enquiry.id}</td>
+              {loading && (
+                <tr>
+                  <td className="px-5 py-8 text-center text-sm font-bold text-slate-500" colSpan="7">
+                    Loading enquiries...
+                  </td>
+                </tr>
+              )}
+
+              {!loading && error && (
+                <tr>
+                  <td className="px-5 py-8 text-center text-sm font-bold text-red-600" colSpan="7">
+                    {error}
+                  </td>
+                </tr>
+              )}
+
+              {!loading && !error && enquiries.length === 0 && (
+                <tr>
+                  <td className="px-5 py-8 text-center text-sm font-bold text-slate-500" colSpan="7">
+                    No enquiries found.
+                  </td>
+                </tr>
+              )}
+
+              {!loading && !error && enquiries.map((enquiry) => (
+                <tr key={enquiry._id} className="border-b border-slate-100 text-sm">
+                  <td className="px-5 py-4 font-extrabold text-slate-950">{enquiry._id?.slice(-6).toUpperCase()}</td>
                   <td className="px-5 py-4 font-semibold text-slate-700">{enquiry.name}</td>
                   <td className="px-5 py-4 font-semibold text-slate-600">{enquiry.phone}</td>
-                  <td className="px-5 py-4 font-semibold text-slate-600">{enquiry.category}</td>
-                  <td className="px-5 py-4 font-semibold text-slate-600">{enquiry.message}</td>
-                  <td className="px-5 py-4 font-semibold text-slate-600">{enquiry.date}</td>
+                  <td className="px-5 py-4 font-semibold text-slate-600">{enquiry.category || "-"}</td>
+                  <td className="px-5 py-4 font-semibold text-slate-600">
+                    {[enquiry.productDetails, enquiry.branch, enquiry.message].filter(Boolean).join(" | ") || "-"}
+                  </td>
+                  <td className="px-5 py-4 font-semibold text-slate-600">{formatDate(enquiry.createdAt)}</td>
                   <td className="px-5 py-4">
-                    <span className={`rounded-full px-3 py-1 text-xs font-extrabold ${statusStyles[enquiry.status]}`}>
+                    <span className={`rounded-full px-3 py-1 text-xs font-extrabold ${statusStyles[enquiry.status] || statusStyles.New}`}>
                       {enquiry.status}
                     </span>
                   </td>

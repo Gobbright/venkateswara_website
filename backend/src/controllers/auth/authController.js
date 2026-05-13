@@ -1,9 +1,11 @@
 import { demoAdminUsers } from "../../data/auth/demoAdminUsers.js";
+import crypto from "crypto";
 import asyncHandler from "../../middleware/asyncHandler.js";
 import AdminUser from "../../models/auth/AdminUser.js";
 import User from "../../models/auth/User.js";
 import { hashPassword, verifyPassword } from "../../utils/auth/password.js";
 import { createToken } from "../../utils/auth/token.js";
+import { sendPasswordResetEmail } from "../../utils/mail.js";
 
 const adminRoleMap = {
   main_admin: {
@@ -75,6 +77,9 @@ const sendAdminAuthResponse = (res, adminUser) => {
   });
 };
 
+const createTemporaryPassword = () =>
+  `SVFS-${crypto.randomBytes(3).toString("hex").toUpperCase()}`;
+
 export const getDemoAdmins = asyncHandler(async (req, res) => {
   const adminUsers = await AdminUser.find({ status: 1 }).sort({ createdAt: 1 });
 
@@ -133,6 +138,46 @@ export const loginUser = asyncHandler(async (req, res) => {
   }
 
   sendAuthResponse(res, user);
+});
+
+export const forgotPassword = asyncHandler(async (req, res) => {
+  const { email } = req.body;
+  const normalizedEmail = email?.trim().toLowerCase();
+
+  if (!normalizedEmail) {
+    res.status(400);
+    throw new Error("Email is required");
+  }
+
+  const user = await User.findOne({ email: normalizedEmail, role: "customer" });
+
+  if (!user) {
+    res.status(404);
+    throw new Error("Email is not registered");
+  }
+
+  const previousPassword = user.password;
+  const temporaryPassword = createTemporaryPassword();
+
+  user.password = hashPassword(temporaryPassword);
+  await user.save();
+
+  try {
+    await sendPasswordResetEmail({
+      to: user.email,
+      name: user.name,
+      temporaryPassword,
+    });
+  } catch (error) {
+    user.password = previousPassword;
+    await user.save();
+    throw error;
+  }
+
+  res.json({
+    success: true,
+    message: "Temporary password sent to your registered email",
+  });
 });
 
 export const loginAdmin = asyncHandler(async (req, res) => {

@@ -13,6 +13,7 @@ import Wishlist from '../other/wishlist/Wishlist';
 import Product from '../product-details/Product';
 import VideoCall from '../other/video-call/VideoCall';
 import Auth from '../other/auth/Auth';
+import ForgotPassword from '../other/auth/ForgotPassword';
 import CategoriesPage from '../categories/CategoriesPage';
 import Admin from '../Admin/Admin';
 
@@ -30,6 +31,7 @@ export const routes = [
   { path: '/wishlist', element: <Wishlist />, name: 'Wishlist' },
   { path: '/video-call', element: <VideoCall />, name: 'Video Call' },
   { path: '/login', element: <Auth />, name: 'Login' },
+  { path: '/forgot-password', element: <ForgotPassword />, name: 'Forgot Password' },
   { path: '/order', element: <Order />, name: 'Order' },
   { path: '/order/track', element: <Order />, name: 'Track Order' },
   { path: '/other/about', element: <About />, name: 'About' },

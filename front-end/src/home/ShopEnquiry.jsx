@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Headphones, Mail, MapPin, Phone, Send, Shirt, ShoppingBag } from "lucide-react";
 import bgImg from "../assets/Images/bg.png";
+import { apiRequest } from "../utils/api";
 
 const enquiryOptions = [
   "Silk Sarees",
@@ -27,8 +28,59 @@ const branches = [
 
 const ShopEnquiry = () => {
   const [activeBranchName, setActiveBranchName] = useState(branches[0].name);
+  const [form, setForm] = useState({
+    name: "",
+    phone: "",
+    category: "",
+    productDetails: "",
+    message: "",
+  });
+  const [submitStatus, setSubmitStatus] = useState("idle");
+  const [feedback, setFeedback] = useState("");
   const activeBranch =
     branches.find((branch) => branch.name === activeBranchName) ?? branches[0];
+
+  const updateField = (field, value) => {
+    setForm((current) => ({ ...current, [field]: value }));
+    setFeedback("");
+    setSubmitStatus("idle");
+  };
+
+  const submitEnquiry = async (event) => {
+    event.preventDefault();
+
+    if (!form.name.trim() || !form.phone.trim()) {
+      setSubmitStatus("error");
+      setFeedback("Please enter your name and phone number.");
+      return;
+    }
+
+    setSubmitStatus("loading");
+    setFeedback("");
+
+    try {
+      await apiRequest("/enquiries", {
+        method: "POST",
+        body: JSON.stringify({
+          ...form,
+          branch: activeBranchName,
+        }),
+      });
+
+      setForm({
+        name: "",
+        phone: "",
+        category: "",
+        productDetails: "",
+        message: "",
+      });
+      setSubmitStatus("success");
+      setFeedback("Enquiry sent successfully. Our team will contact you soon.");
+    } catch (error) {
+      setSubmitStatus("error");
+      setFeedback(error.message || "Unable to send enquiry. Please try again.");
+    }
+  };
 
   return (
     <section
@@ -105,16 +157,22 @@ const ShopEnquiry = () => {
             </div>
           </div>
 
-          <form className="grid gap-4">
+          <form className="grid gap-4" onSubmit={submitEnquiry}>
             <div className="grid gap-4 md:grid-cols-2">
               <input
                 type="text"
+                value={form.name}
+                onChange={(event) => updateField("name", event.target.value)}
                 placeholder="Your Name"
+                required
                 className="h-12 rounded-lg border border-orange-100 bg-orange-50 px-4 outline-none transition focus:border-orange-500 focus:bg-white"
               />
               <input
                 type="tel"
+                value={form.phone}
+                onChange={(event) => updateField("phone", event.target.value)}
                 placeholder="Phone Number"
+                required
                 className="h-12 rounded-lg border border-orange-100 bg-orange-50 px-4 outline-none transition focus:border-orange-500 focus:bg-white"
               />
             </div>
@@ -122,10 +180,14 @@ const ShopEnquiry = () => {
             <div className="grid gap-4 md:grid-cols-2">
               <div className="relative">
                 <ShoppingBag className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                <select className="h-12 w-full appearance-none rounded-lg border border-orange-100 bg-orange-50 pl-11 pr-4 outline-none transition focus:border-orange-500 focus:bg-white">
-                  <option>Product Category</option>
+                <select
+                  value={form.category}
+                  onChange={(event) => updateField("category", event.target.value)}
+                  className="h-12 w-full appearance-none rounded-lg border border-orange-100 bg-orange-50 pl-11 pr-4 outline-none transition focus:border-orange-500 focus:bg-white"
+                >
+                  <option value="">Product Category</option>
                   {enquiryOptions.map((option) => (
-                    <option key={option}>{option}</option>
+                    <option key={option} value={option}>{option}</option>
                   ))}
                 </select>
               </div>
@@ -133,6 +195,8 @@ const ShopEnquiry = () => {
                 <Shirt className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                 <input
                   type="text"
+                  value={form.productDetails}
+                  onChange={(event) => updateField("productDetails", event.target.value)}
                   placeholder="Product / Size / Color"
                   className="h-12 w-full rounded-lg border border-orange-100 bg-orange-50 pl-11 pr-4 outline-none transition focus:border-orange-500 focus:bg-white"
                 />
@@ -141,16 +205,31 @@ const ShopEnquiry = () => {
 
             <textarea
               rows="5"
+              value={form.message}
+              onChange={(event) => updateField("message", event.target.value)}
               placeholder="Tell us what you are looking for..."
               className="resize-none rounded-lg border border-orange-100 bg-orange-50 px-4 py-3 outline-none transition focus:border-orange-500 focus:bg-white"
             />
 
             <button
-              type="button"
+              type="submit"
+              disabled={submitStatus === "loading"}
               className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-orange-600 px-7 font-bold text-white transition hover:bg-gradient-to-r hover:from-orange-600 hover:via-[#FFBE8A] hover:to-[#4DA7AF] md:w-fit"
             >
-              Send Enquiry <Send size={18} />
+              {submitStatus === "loading" ? "Sending..." : "Send Enquiry"} <Send size={18} />
             </button>
+
+            {feedback && (
+              <p
+                className={`rounded-lg px-4 py-3 text-sm font-bold ${
+                  submitStatus === "success"
+                    ? "bg-green-50 text-green-700"
+                    : "bg-orange-50 text-orange-700"
+                }`}
+              >
+                {feedback}
+              </p>
+            )}
 
             <div className="grid gap-4 rounded-lg bg-orange-50 p-4 text-sm text-slate-700">
               <div className="flex items-start gap-3">

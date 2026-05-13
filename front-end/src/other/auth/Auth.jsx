@@ -142,7 +142,11 @@ const Auth = () => {
                   <input type="checkbox" className="h-4 w-4 accent-orange-600" />
                   Remember me
                 </label>
-                <button type="button" className="text-orange-600 transition hover:text-[#21747b]">
+                <button
+                  type="button"
+                  onClick={() => navigate("/forgot-password")}
+                  className="text-orange-600 transition hover:text-[#21747b]"
+                >
                   Forgot password?
                 </button>
               </div>
