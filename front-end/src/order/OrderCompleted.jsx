@@ -1,14 +1,30 @@
+import { useEffect, useState } from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
 import { CheckCircle2, PackageCheck, ShoppingBag, Truck } from "lucide-react";
-import { getLastCompletedOrder } from "../utils/orderTracking";
+import { apiRequest } from "../utils/api";
 
 const getOrderId = (order) => order?.orderCode || order?._id || "SVFS-ORDER";
 
 export default function OrderCompleted() {
   const { id } = useParams();
   const location = useLocation();
-  const order = location.state?.order || getLastCompletedOrder();
+  const [order, setOrder] = useState(location.state?.order || null);
+  const [message, setMessage] = useState("");
   const orderId = getOrderId(order);
+
+  useEffect(() => {
+    const loadOrder = async () => {
+      try {
+        const result = await apiRequest(`/orders/${id}`);
+        setOrder(result.data);
+        setMessage("");
+      } catch (error) {
+        setMessage(error.message || "Order details load failed.");
+      }
+    };
+
+    loadOrder();
+  }, [id]);
 
   return (
     <div className="min-h-screen bg-[#FAF0E6] px-4 py-8 text-[#1a0a00] md:px-16">
@@ -89,7 +105,7 @@ export default function OrderCompleted() {
 
           {!order && (
             <p className="px-6 pb-6 text-center text-sm font-bold text-orange-700">
-              Order details not found for {id}. Track Order la recent orders check pannunga.
+              {message || `Order details not found for ${id}. Track Order la recent orders check pannunga.`}
             </p>
           )}
         </section>

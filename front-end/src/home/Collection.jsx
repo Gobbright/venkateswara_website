@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ShoppingCart, Star } from "lucide-react";
-import { getShopItems, toggleShopItem } from "../utils/shopItems";
+import { loadShopItems, toggleShopItem } from "../utils/shopItems";
+import { getStoredUser } from "../utils/userSession";
 
 // Replace these with your actual image imports
 import saree1 from "../assets/Images/Collection/1.png";
@@ -62,10 +63,10 @@ const products = [
 ];
 
 const ProductCard = ({ product }) => {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [hovered, setHovered] = useState(false);
-  const [addedToCart, setAddedToCart] = useState(() =>
-    getShopItems("cart").some((item) => item.slug === product.path)
-  );
+  const [addedToCart, setAddedToCart] = useState(false);
   const shopItem = {
     ...product,
     slug: product.path,
@@ -150,7 +151,16 @@ const ProductCard = ({ product }) => {
           onClick={(event) => {
             event.preventDefault();
             event.stopPropagation();
-            setAddedToCart(toggleShopItem("cart", shopItem));
+            const user = getStoredUser();
+
+            if (!user) {
+              navigate("/login", { state: { returnTo: location.pathname } });
+              return;
+            }
+
+            loadShopItems("cart", user)
+              .then((items) => toggleShopItem("cart", shopItem, items, user))
+              .then((result) => setAddedToCart(result.isAdded));
           }}
           className={`mt-auto flex h-9 w-full items-center justify-center gap-2 rounded-full border px-3 text-sm font-bold transition ${
             addedToCart

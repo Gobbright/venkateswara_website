@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Edit3, PackageCheck, ShoppingCart, Truck, X, XCircle } from "lucide-react";
-import { orders as defaultOrders } from "../data/adminData";
 import { apiRequest } from "../../utils/api";
 
 const categoryFilters = [
@@ -36,9 +35,9 @@ export default function Orders() {
     const loadOrders = async () => {
       try {
         const result = await apiRequest("/orders");
-        setOrderList(result.data.length ? result.data : defaultOrders);
+        setOrderList(result.data);
       } catch (error) {
-        setOrderList(defaultOrders);
+        setOrderList([]);
         setMessage(error.message || "Orders load failed.");
       }
     };

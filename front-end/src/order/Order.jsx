@@ -10,7 +10,6 @@ import {
   Truck,
 } from "lucide-react";
 import { apiRequest } from "../utils/api";
-import { getOrdersForUser, saveCompletedOrder } from "../utils/orderTracking";
 import { getStoredUser } from "../utils/userSession";
 
 const statusSteps = ["Confirmed", "Packed", "Delivered"];
@@ -29,7 +28,7 @@ export default function Order() {
   const location = useLocation();
   const navigate = useNavigate();
   const [currentUser, setCurrentUser] = useState(() => getStoredUser());
-  const [orders, setOrders] = useState(() => getOrdersForUser(getStoredUser()));
+  const [orders, setOrders] = useState([]);
   const [query, setQuery] = useState("");
   const [message, setMessage] = useState("");
 
@@ -46,13 +45,11 @@ export default function Order() {
     const loadOrders = async () => {
       try {
         const result = await apiRequest(`/orders?userId=${encodeURIComponent(user.id)}`);
-        result.data.forEach((order) => saveCompletedOrder(order, user));
-        setOrders(result.data.length ? result.data : getOrdersForUser(user));
+        setOrders(result.data);
         setMessage(result.data.length ? "" : "Innum order illa da. Shopping start pannunga.");
       } catch (error) {
-        const savedOrders = getOrdersForUser(user);
-        setOrders(savedOrders);
-        setMessage(savedOrders.length ? "" : error.message || "Orders load failed.");
+        setOrders([]);
+        setMessage(error.message || "Orders load failed.");
       }
     };
 

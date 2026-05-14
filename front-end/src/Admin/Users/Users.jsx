@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Check, Pencil, Trash2, X } from "lucide-react";
-import { users as defaultUsers } from "../data/adminData";
 import { apiRequest } from "../../utils/api";
 
 export default function Users() {
@@ -13,9 +12,9 @@ export default function Users() {
     const loadUsers = async () => {
       try {
         const result = await apiRequest("/auth/users");
-        setUsers(result.data.length ? result.data : defaultUsers);
+        setUsers(result.data);
       } catch (error) {
-        setUsers(defaultUsers);
+        setUsers([]);
         setMessage(error.message || "Users load failed.");
       }
     };

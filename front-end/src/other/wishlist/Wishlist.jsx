@@ -1,61 +1,82 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Heart, ShoppingBag, ShoppingCart } from "lucide-react";
-import { getShopItems, removeShopItem, saveShopItems, toggleShopItem } from "../../utils/shopItems";
+import { assetUrl } from "../../utils/api";
+import { loadShopItems, removeShopItem, saveShopItems, toggleShopItem } from "../../utils/shopItems";
 import { getStoredUser } from "../../utils/userSession";
 
 export default function Wishlist() {
   const location = useLocation();
   const navigate = useNavigate();
-  const [wishlistItems, setWishlistItems] = useState(() => getShopItems("wishlist"));
-  const [cartItems, setCartItems] = useState(() => getShopItems("cart").map((item) => item.slug));
+  const [wishlistItems, setWishlistItems] = useState([]);
+  const [cartItems, setCartItems] = useState([]);
 
-  const handleRemove = (slug) => {
-    removeShopItem("wishlist", slug);
-    setWishlistItems(getShopItems("wishlist"));
+  useEffect(() => {
+    const loadWishlist = async () => {
+      const user = getStoredUser();
+
+      if (!user) {
+        setWishlistItems([]);
+        setCartItems([]);
+        return;
+      }
+
+      const [wishlistResult, cartResult] = await Promise.all([
+        loadShopItems("wishlist", user),
+        loadShopItems("cart", user),
+      ]);
+      setWishlistItems(wishlistResult);
+      setCartItems(cartResult);
+    };
+
+    loadWishlist();
+  }, []);
+
+  const handleRemove = async (slug) => {
+    await removeShopItem("wishlist", slug);
+    setWishlistItems((current) => current.filter((item) => item.slug !== slug));
   };
 
-  const handleCartToggle = (item) => {
+  const handleCartToggle = async (item) => {
+    const user = getStoredUser();
+
+    if (!user) {
+      navigate("/login", { state: { returnTo: location.pathname } });
+      return;
+    }
+
+    const result = await toggleShopItem("cart", item, cartItems, user);
+    setCartItems(result.items);
+  };
+
+  const handleBuyNow = async (item) => {
     if (!getStoredUser()) {
       navigate("/login", { state: { returnTo: location.pathname } });
       return;
     }
 
-    const isAdded = toggleShopItem("cart", item);
-    setCartItems((currentItems) =>
-      isAdded ? [...currentItems, item.slug] : currentItems.filter((slug) => slug !== item.slug)
-    );
-  };
-
-  const handleBuyNow = (item) => {
-    if (!getStoredUser()) {
-      navigate("/login", { state: { returnTo: location.pathname } });
-      return;
-    }
-
-    const currentCartItems = getShopItems("cart");
-    const nextCartItems = currentCartItems.some((cartItem) => cartItem.slug === item.slug)
-      ? currentCartItems
-      : [{ quantity: 1, size: "M", color: "Default", ...item }, ...currentCartItems];
-    saveShopItems("cart", nextCartItems);
+    const nextCartItems = cartItems.some((cartItem) => cartItem.slug === item.slug)
+      ? cartItems
+      : [{ quantity: 1, size: "M", color: "Default", ...item }, ...cartItems];
+    await saveShopItems("cart", nextCartItems);
+    setCartItems(nextCartItems);
     navigate("/cart");
   };
 
-  const handleAddAllToCart = () => {
+  const handleAddAllToCart = async () => {
     if (!getStoredUser()) {
       navigate("/login", { state: { returnTo: location.pathname } });
       return;
     }
 
-    const currentCartItems = getShopItems("cart");
-    const currentSlugs = new Set(currentCartItems.map((item) => item.slug));
+    const currentSlugs = new Set(cartItems.map((item) => item.slug));
     const newItems = wishlistItems
       .filter((item) => !currentSlugs.has(item.slug))
       .map((item) => ({ quantity: 1, size: "M", color: "Default", ...item }));
-    const nextCartItems = [...newItems, ...currentCartItems];
+    const nextCartItems = [...newItems, ...cartItems];
 
-    saveShopItems("cart", nextCartItems);
-    setCartItems(nextCartItems.map((item) => item.slug));
+    await saveShopItems("cart", nextCartItems);
+    setCartItems(nextCartItems);
   };
 
   return (
@@ -112,7 +133,7 @@ export default function Wishlist() {
 
               <div className="flex h-36 shrink-0 items-center justify-center overflow-hidden bg-white p-2 sm:h-56 sm:p-3 md:h-60">
                 <img
-                  src={item.image}
+                  src={assetUrl(item.image)}
                   alt={item.name}
                   loading="lazy"
                   decoding="async"
@@ -146,13 +167,13 @@ export default function Wishlist() {
                     type="button"
                     onClick={() => handleCartToggle(item)}
                     className={`flex h-9 items-center justify-center gap-1.5 rounded-full border px-1 text-[11px] font-bold transition sm:h-10 sm:px-3 sm:text-sm ${
-                      cartItems.includes(item.slug)
+                      cartItems.some((cartItem) => cartItem.slug === item.slug)
                         ? "border-orange-600 bg-orange-600 text-white"
                         : "border-black/20 bg-white text-gray-900 hover:border-black hover:bg-gray-50"
                     }`}
                   >
                     <ShoppingCart size={15} />
-                    {cartItems.includes(item.slug) ? "Added" : "Add Cart"}
+                    {cartItems.some((cartItem) => cartItem.slug === item.slug) ? "Added" : "Add Cart"}
                   </button>
                   <button
                     type="button"

@@ -1,15 +1,14 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { CreditCard } from 'lucide-react';
-import { getShopItems, removeShopItem, saveShopItems } from '../../utils/shopItems';
-import { apiRequest } from '../../utils/api';
-import { saveCompletedOrder } from '../../utils/orderTracking';
+import { loadShopItems, removeShopItem, saveShopItems } from '../../utils/shopItems';
+import { apiRequest, assetUrl } from '../../utils/api';
 import { getStoredUser } from '../../utils/userSession';
 
 export default function Cart() {
   const location = useLocation();
   const navigate = useNavigate();
-  const [cartItems, setCartItems] = useState(() => getShopItems("cart"));
+  const [cartItems, setCartItems] = useState([]);
   const [customer, setCustomer] = useState(() => {
     const user = getStoredUser();
     return { name: user?.name || "", phone: user?.phone || "", address: "" };
@@ -27,9 +26,29 @@ export default function Cart() {
     saveShopItems("cart", nextItems);
   };
 
-  const handleRemove = (slug) => {
-    removeShopItem("cart", slug);
-    setCartItems(getShopItems("cart"));
+  useEffect(() => {
+    const loadCart = async () => {
+      const user = getStoredUser();
+
+      if (!user) {
+        setCartItems([]);
+        return;
+      }
+
+      try {
+        setCartItems(await loadShopItems("cart", user));
+      } catch (error) {
+        setMessage(error.message || "Cart load failed.");
+      }
+    };
+
+    loadCart();
+  }, []);
+
+  const handleRemove = async (slug) => {
+    await removeShopItem("cart", slug);
+    const nextItems = cartItems.filter((item) => item.slug !== slug);
+    setCartItems(nextItems);
   };
 
   const subtotal = cartItems.reduce(
@@ -86,8 +105,7 @@ export default function Cart() {
           paymentMethod: "Online",
         }),
       });
-      saveCompletedOrder(result.data, user);
-      saveShopItems("cart", []);
+      await saveShopItems("cart", [], user);
       setCartItems([]);
       setCustomer({ name: "", phone: "", address: "" });
       navigate(`/order/completed/${result.data._id}`, { state: { order: result.data } });
@@ -117,7 +135,7 @@ export default function Cart() {
               >
                 <div className="flex h-44 items-center justify-center overflow-hidden rounded-2xl bg-white p-3">
                   <img
-                    src={item.image}
+                    src={assetUrl(item.image)}
                     alt={item.name}
                     loading="lazy"
                     decoding="async"

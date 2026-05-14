@@ -1,19 +1,18 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FolderTree, PackagePlus, PhoneCall, ShoppingCart, Users } from "lucide-react";
-import { categories as defaultCategories, orders as defaultOrders, users as defaultUsers, videoCalls as defaultVideoCalls } from "../data/adminData";
 import { apiRequest } from "../../utils/api";
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const [counts, setCounts] = useState({
-    orders: defaultOrders.length,
-    categories: defaultCategories.length,
+    orders: 0,
+    categories: 0,
     products: 0,
-    users: defaultUsers.length,
-    videoCalls: defaultVideoCalls.length,
+    users: 0,
+    videoCalls: 0,
   });
-  const [newOrders, setNewOrders] = useState(defaultOrders.slice(0, 5));
+  const [newOrders, setNewOrders] = useState([]);
 
   useEffect(() => {
     const loadDashboard = async () => {
@@ -27,14 +26,15 @@ export default function Dashboard() {
         ]);
         setCounts({
           orders: ordersResult.data.length,
-          categories: categoriesResult.data.length || defaultCategories.length,
+          categories: categoriesResult.data.length,
           products: productsResult.data.length,
           users: usersResult.data.length,
           videoCalls: videoCallsResult.data.length,
         });
-        setNewOrders((ordersResult.data.length ? ordersResult.data : defaultOrders).slice(0, 5));
+        setNewOrders(ordersResult.data.slice(0, 5));
       } catch {
-        setNewOrders(defaultOrders.slice(0, 5));
+        setCounts({ orders: 0, categories: 0, products: 0, users: 0, videoCalls: 0 });
+        setNewOrders([]);
       }
     };
 

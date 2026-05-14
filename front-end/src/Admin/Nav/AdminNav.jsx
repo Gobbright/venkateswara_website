@@ -13,7 +13,7 @@ import {
   Users,
 } from "lucide-react";
 import { hasAdminAccess } from "../auth/jwtAuth";
-import { categories } from "../data/adminData";
+import { apiRequest } from "../../utils/api";
 
 const orderStatusNav = ["Overall", "Confirmed", "Packed", "Delivered", "Cancelled"];
 
@@ -25,6 +25,7 @@ export default function AdminNav({ onLogout, onNavigate = () => {}, user }) {
   const [ordersOpen, setOrdersOpen] = useState(false);
   const [categoriesOpen, setCategoriesOpen] = useState(false);
   const [productsOpen, setProductsOpen] = useState(false);
+  const [categories, setCategories] = useState([]);
 
   const isOrders = location.pathname.startsWith("/admin/orders");
   const isCategory = location.pathname.startsWith("/admin/category");
@@ -48,6 +49,19 @@ export default function AdminNav({ onLogout, onNavigate = () => {}, user }) {
     setCategoriesOpen(isCategory);
     setProductsOpen(isProducts);
   }, [isOrders, isCategory, isProducts]);
+
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const result = await apiRequest("/categories");
+        setCategories(result.data);
+      } catch {
+        setCategories([]);
+      }
+    };
+
+    loadCategories();
+  }, []);
 
   const navButtonClass = (active) =>
     `flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-extrabold transition ${

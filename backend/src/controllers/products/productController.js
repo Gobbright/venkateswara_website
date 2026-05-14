@@ -4,6 +4,7 @@ import {
   getProductModelByCategory,
   productCollections,
 } from "../../models/products/Product.js";
+import { deleteProductImage, isDataUrlImage, saveProductImage } from "../../utils/uploads/productImageUpload.js";
 
 const createProductCode = async () => {
   const productGroups = await Promise.all(
@@ -68,9 +69,11 @@ export const getProductById = asyncHandler(async (req, res) => {
 
 export const createProduct = asyncHandler(async (req, res) => {
   const productCode = req.body.productCode || (await createProductCode());
+  const image = await saveProductImage(req.body.image, productCode);
   const Product = getProductModelByCategory(req.body.category);
   const product = await Product.create({
     ...req.body,
+    image,
     productCode,
     slug: req.body.slug || createProductSlug(req.body.name, productCode),
     stockStatus: Number(req.body.stock || 0) <= 10 ? "Low Stock" : "Active",
@@ -96,6 +99,8 @@ export const updateProduct = asyncHandler(async (req, res) => {
 
   const currentCategory = existingProduct.category;
   const nextCategory = update.category || currentCategory;
+  const shouldReplaceImage = isDataUrlImage(update.image);
+  update.image = await saveProductImage(update.image, existingProduct.productCode);
   let product;
 
   if (nextCategory !== currentCategory) {
@@ -116,6 +121,10 @@ export const updateProduct = asyncHandler(async (req, res) => {
     });
   }
 
+  if (shouldReplaceImage) {
+    await deleteProductImage(existingProduct.image);
+  }
+
   res.json({ success: true, data: product });
 });
 
@@ -129,9 +138,11 @@ export const deleteProduct = asyncHandler(async (req, res) => {
 
   const product = await existingProduct.constructor.findByIdAndUpdate(
     req.params.id,
-    { status: 0, isActive: false, deletedAt: new Date() },
+    { status: 0, isActive: false, deletedAt: new Date(), image: "" },
     { new: true }
   );
+
+  await deleteProductImage(existingProduct.image);
 
   res.json({ success: true, data: product });
 });

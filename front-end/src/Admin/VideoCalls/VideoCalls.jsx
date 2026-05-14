@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Check, Pencil, Trash2, X } from "lucide-react";
-import { videoCalls as defaultVideoCalls } from "../data/adminData";
 import { apiRequest } from "../../utils/api";
 
 const statusStyles = {
@@ -19,9 +18,9 @@ export default function VideoCalls() {
     const loadVideoCalls = async () => {
       try {
         const result = await apiRequest("/video-calls");
-        setVideoCalls(result.data.length ? result.data : defaultVideoCalls);
+        setVideoCalls(result.data);
       } catch (error) {
-        setVideoCalls(defaultVideoCalls);
+        setVideoCalls([]);
         setMessage(error.message || "Video calls load failed.");
       }
     };

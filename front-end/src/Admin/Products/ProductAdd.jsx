@@ -1,8 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { ImagePlus, PackagePlus } from "lucide-react";
-import { categories as defaultCategories } from "../data/adminData";
-import { apiRequest } from "../../utils/api";
+import { apiRequest, assetUrl } from "../../utils/api";
 
 const emptyForm = {
   name: "",
@@ -50,17 +49,20 @@ const normalizeCategories = (items) =>
       .filter(Boolean),
   }));
 
-export default function ProductAdd({ initialCategory = defaultCategories[0].name }) {
+export default function ProductAdd({ initialCategory = "Mens" }) {
   const { categoryName } = useParams();
   const imageInputRef = useRef(null);
   const routeCategory = categoryName ? decodeURIComponent(categoryName) : initialCategory;
-  const [categories, setCategories] = useState(defaultCategories);
+  const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(routeCategory);
   const [form, setForm] = useState(emptyForm);
   const [selectedImage, setSelectedImage] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState("");
-  const selectedCategoryData = categories.find((category) => category.name === selectedCategory) ?? categories[0];
+  const selectedCategoryData = useMemo(
+    () => categories.find((category) => category.name === selectedCategory) ?? { name: selectedCategory, subcategories: [] },
+    [categories, selectedCategory]
+  );
   const discountedPrice = calculateDiscountedPrice(form.price, form.discount);
 
   useEffect(() => {
@@ -75,7 +77,8 @@ export default function ProductAdd({ initialCategory = defaultCategories[0].name
           setCategories(normalizeCategories(result.data));
         }
       } catch {
-        setCategories(defaultCategories);
+        setCategories([]);
+        setMessage("Categories DB la load aagala.");
       }
     };
 
@@ -141,7 +144,7 @@ export default function ProductAdd({ initialCategory = defaultCategories[0].name
     const productPayload = {
       name: form.name.trim(),
       category: selectedCategory,
-      subcategory: form.subcategory || selectedCategoryData.subcategories[0],
+      subcategory: form.subcategory || selectedCategoryData.subcategories[0] || "",
       originalPrice: Number(form.price),
       price: discountedPrice,
       stock: Number(form.stock),
@@ -213,7 +216,7 @@ export default function ProductAdd({ initialCategory = defaultCategories[0].name
                 >
                   {form.image ? (
                     <>
-                      <img src={form.image} alt="Product preview" className="h-7 w-7 rounded-lg object-cover" />
+                      <img src={assetUrl(form.image)} alt="Product preview" className="h-7 w-7 rounded-lg object-cover" />
                       <span>Change Product Image</span>
                     </>
                   ) : (

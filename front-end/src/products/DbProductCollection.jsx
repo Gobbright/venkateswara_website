@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Grid2X2, ShoppingBag, ShoppingCart, Star } from "lucide-react";
-import { apiRequest } from "../utils/api";
-import { getShopItems, toggleShopItem } from "../utils/shopItems";
+import { apiRequest, assetUrl } from "../utils/api";
+import { loadShopItems, toggleShopItem } from "../utils/shopItems";
 import { getStoredUser } from "../utils/userSession";
 
 const productKey = (product) => product._id;
@@ -28,8 +28,8 @@ export default function DbProductCollection({ title = "Products", category = "" 
   const selectedSubcategory = new URLSearchParams(location.search).get("subcategory") || "All";
   const [products, setProducts] = useState([]);
   const [message, setMessage] = useState("Loading products...");
-  const [cartItems, setCartItems] = useState(() => getShopItems("cart").map((item) => item.slug));
-  const [wishlistItems, setWishlistItems] = useState(() => getShopItems("wishlist").map((item) => item.slug));
+  const [cartProducts, setCartProducts] = useState([]);
+  const [wishlistProducts, setWishlistProducts] = useState([]);
 
   useEffect(() => {
     const loadProducts = async () => {
@@ -48,6 +48,31 @@ export default function DbProductCollection({ title = "Products", category = "" 
     loadProducts();
   }, [category]);
 
+  useEffect(() => {
+    const loadUserItems = async () => {
+      const user = getStoredUser();
+
+      if (!user) {
+        setCartProducts([]);
+        setWishlistProducts([]);
+        return;
+      }
+
+      try {
+        const [cartResult, wishlistResult] = await Promise.all([
+          loadShopItems("cart", user),
+          loadShopItems("wishlist", user),
+        ]);
+        setCartProducts(cartResult);
+        setWishlistProducts(wishlistResult);
+      } catch (error) {
+        console.error("Shop items load failed", error);
+      }
+    };
+
+    loadUserItems();
+  }, [location.pathname]);
+
   const subcategories = useMemo(
     () => [...new Set(products.map((product) => product.subcategory).filter(Boolean))],
     [products]
@@ -56,30 +81,30 @@ export default function DbProductCollection({ title = "Products", category = "" 
     ? products
     : products.filter((product) => product.subcategory === selectedSubcategory);
 
-  const toggleCart = (product) => {
-    if (!getStoredUser()) {
+  const toggleCart = async (product) => {
+    const user = getStoredUser();
+
+    if (!user) {
       navigate("/login", { state: { returnTo: location.pathname } });
       return;
     }
 
     const item = toShopItem(product);
-    const added = toggleShopItem("cart", item);
-    setCartItems((current) =>
-      added ? [...current, item.slug] : current.filter((slug) => slug !== item.slug)
-    );
+    const result = await toggleShopItem("cart", item, cartProducts, user);
+    setCartProducts(result.items);
   };
 
-  const toggleWishlist = (product) => {
-    if (!getStoredUser()) {
+  const toggleWishlist = async (product) => {
+    const user = getStoredUser();
+
+    if (!user) {
       navigate("/login", { state: { returnTo: location.pathname } });
       return;
     }
 
     const item = toShopItem(product);
-    const added = toggleShopItem("wishlist", item);
-    setWishlistItems((current) =>
-      added ? [...current, item.slug] : current.filter((slug) => slug !== item.slug)
-    );
+    const result = await toggleShopItem("wishlist", item, wishlistProducts, user);
+    setWishlistProducts(result.items);
   };
 
   return (
@@ -128,8 +153,8 @@ export default function DbProductCollection({ title = "Products", category = "" 
         {visibleProducts.map((product) => {
           const id = productKey(product);
           const productCode = product.productCode || `PRD-${String(id).slice(-5).toUpperCase()}`;
-          const isCartAdded = cartItems.includes(id);
-          const isWishlisted = wishlistItems.includes(id);
+          const isCartAdded = cartProducts.some((item) => item.slug === id);
+          const isWishlisted = wishlistProducts.some((item) => item.slug === id);
 
           return (
             <div
@@ -158,7 +183,7 @@ export default function DbProductCollection({ title = "Products", category = "" 
               >
                 {product.image ? (
                   <img
-                    src={product.image}
+                    src={assetUrl(product.image)}
                     alt={product.name}
                     loading="lazy"
                     decoding="async"

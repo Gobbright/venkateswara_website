@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { FolderTree, Pencil, Plus, Trash2 } from "lucide-react";
-import { categories as defaultCategories } from "../data/adminData";
 import { apiRequest } from "../../utils/api";
 
 const normalizeCategories = (items) =>
@@ -23,12 +22,10 @@ const normalizeCategories = (items) =>
     ),
   }));
 
-const fallbackCategories = normalizeCategories(defaultCategories);
-
 export default function Category() {
   const navigate = useNavigate();
   const { categoryName } = useParams();
-  const [categories, setCategories] = useState(fallbackCategories);
+  const [categories, setCategories] = useState([]);
   const [showDeleted, setShowDeleted] = useState(false);
   const [categoryNameInput, setCategoryNameInput] = useState("");
   const [subcategoryNameInput, setSubcategoryNameInput] = useState("");

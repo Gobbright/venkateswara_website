@@ -1,5 +1,6 @@
 import asyncHandler from "../../middleware/asyncHandler.js";
 import Order from "../../models/orders/Order.js";
+import mongoose from "mongoose";
 
 const createOrderCode = async () => {
   const orders = await Order.find({ orderCode: /^SVFS-/ }).select("orderCode");
@@ -24,6 +25,20 @@ export const getOrders = asyncHandler(async (req, res) => {
 
   const orders = await Order.find(filter).sort({ createdAt: -1 }).lean();
   res.json({ success: true, data: orders });
+});
+
+export const getOrderById = asyncHandler(async (req, res) => {
+  const orderFilter = mongoose.isValidObjectId(req.params.id)
+    ? { $or: [{ _id: req.params.id }, { orderCode: req.params.id }] }
+    : { orderCode: req.params.id };
+  const order = await Order.findOne(orderFilter).lean();
+
+  if (!order) {
+    res.status(404);
+    throw new Error("Order not found");
+  }
+
+  res.json({ success: true, data: order });
 });
 
 export const createOrder = asyncHandler(async (req, res) => {

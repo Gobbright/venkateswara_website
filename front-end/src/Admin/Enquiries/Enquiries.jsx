@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Trash2 } from "lucide-react";
-import { enquiries as defaultEnquiries } from "../data/adminData";
 import { apiRequest } from "../../utils/api";
 
 const statusStyles = {
@@ -19,9 +18,9 @@ export default function Enquiries() {
     const loadEnquiries = async () => {
       try {
         const result = await apiRequest("/enquiries");
-        setEnquiries(result.data.length ? result.data : defaultEnquiries);
+        setEnquiries(result.data);
       } catch (error) {
-        setEnquiries(defaultEnquiries);
+        setEnquiries([]);
         setMessage(error.message || "Enquiries load failed.");
       }
     };

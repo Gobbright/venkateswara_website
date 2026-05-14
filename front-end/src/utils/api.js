@@ -1,4 +1,17 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+export const API_ORIGIN = API_BASE_URL.replace(/\/api\/?$/, "");
+
+export const assetUrl = (value) => {
+  if (!value || typeof value !== "string") {
+    return value;
+  }
+
+  if (value.startsWith("http") || value.startsWith("data:")) {
+    return value;
+  }
+
+  return `${API_ORIGIN}${value.startsWith("/") ? value : `/${value}`}`;
+};
 
 export const apiRequest = async (path, options = {}) => {
   const url = `${API_BASE_URL}${path}`;

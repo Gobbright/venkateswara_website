@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { AlertTriangle, Check, ImagePlus, Pencil, Trash2, X } from "lucide-react";
-import { categories as defaultCategories } from "../data/adminData";
-import { apiRequest } from "../../utils/api";
+import { apiRequest, assetUrl } from "../../utils/api";
 
 const statusStyles = {
   Active: "bg-green-50 text-green-700",
@@ -47,7 +46,7 @@ const parseSizes = (size) =>
 
 export default function ProductList() {
   const editImageInputRef = useRef(null);
-  const [categories, setCategories] = useState(defaultCategories);
+  const [categories, setCategories] = useState([]);
   const [activeView, setActiveView] = useState("products");
   const [activeFilter, setActiveFilter] = useState("All");
   const [products, setProducts] = useState([]);
@@ -192,8 +191,8 @@ export default function ProductList() {
     }
   };
 
-  const activeEditCategory = editForm?.category ?? categories[0].name;
-  const activeEditCategoryData = categories.find((category) => category.name === activeEditCategory) ?? categories[0];
+  const activeEditCategory = editForm?.category ?? categories[0]?.name ?? "";
+  const activeEditCategoryData = categories.find((category) => category.name === activeEditCategory) ?? { subcategories: [] };
   const editSellingPrice = editForm ? calculateDiscountedPrice(editForm.price, editForm.discount) : 0;
 
   return (
@@ -264,7 +263,7 @@ export default function ProductList() {
                 <tr key={product._id} className="border-b border-slate-100 text-sm">
                   <td className="px-5 py-4">
                     {product.image ? (
-                      <img src={product.image} alt={product.name} className="h-12 w-12 rounded-2xl object-cover" />
+                      <img src={assetUrl(product.image)} alt={product.name} className="h-12 w-12 rounded-2xl object-cover" />
                     ) : (
                       <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-xs font-extrabold text-slate-500">
                         IMG
@@ -375,7 +374,7 @@ export default function ProductList() {
               >
                 {editForm.image ? (
                   <>
-                    <img src={editForm.image} alt="Product preview" className="h-24 w-24 rounded-2xl object-cover" />
+                    <img src={assetUrl(editForm.image)} alt="Product preview" className="h-24 w-24 rounded-2xl object-cover" />
                     Change Product Image
                   </>
                 ) : (
@@ -396,11 +395,11 @@ export default function ProductList() {
                   value={editForm.category}
                   onChange={(event) => {
                     const nextCategory = event.target.value;
-                    const nextCategoryData = categories.find((category) => category.name === nextCategory) ?? categories[0];
+                    const nextCategoryData = categories.find((category) => category.name === nextCategory) ?? { subcategories: [] };
                     setEditForm((current) => ({
                       ...current,
                       category: nextCategory,
-                      subcategory: nextCategoryData.subcategories[0],
+                      subcategory: nextCategoryData.subcategories[0] || "",
                     }));
                   }}
                   className="h-12 rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold outline-none focus:border-[#4DA7AF] focus:bg-white"

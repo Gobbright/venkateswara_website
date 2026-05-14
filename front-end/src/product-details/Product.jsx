@@ -1,9 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { Heart, Minus, Plus, ShoppingCart } from "lucide-react";
-import { apiRequest } from "../utils/api";
-import { getShopItems, toggleShopItem } from "../utils/shopItems";
-import { saveCompletedOrder } from "../utils/orderTracking";
+import { apiRequest, assetUrl } from "../utils/api";
+import { loadShopItems, toggleShopItem } from "../utils/shopItems";
 import { getStoredUser } from "../utils/userSession";
 
 const toShopItem = (product, quantity, size) => ({
@@ -44,8 +43,15 @@ export default function Product() {
         const result = await apiRequest(`/products/${id}`);
         setProduct(result.data);
         setSelectedSize((result.data.size || "M").split(",")[0].trim() || "M");
-        setWishlisted(getShopItems("wishlist").some((item) => item.slug === result.data._id));
-        setAddedToCart(getShopItems("cart").some((item) => item.slug === result.data._id));
+        const user = getStoredUser();
+        if (user) {
+          const [cartResult, wishlistResult] = await Promise.all([
+            loadShopItems("cart", user),
+            loadShopItems("wishlist", user),
+          ]);
+          setWishlisted(wishlistResult.some((item) => item.slug === result.data._id));
+          setAddedToCart(cartResult.some((item) => item.slug === result.data._id));
+        }
         setMessage("");
       } catch (error) {
         setMessage(error.message || "Product load failed.");
@@ -68,24 +74,32 @@ export default function Product() {
     : 0;
   const amount = product ? Number(product.price || 0) * quantity : 0;
 
-  const handleCart = () => {
-    if (!getStoredUser()) {
+  const handleCart = async () => {
+    const user = getStoredUser();
+
+    if (!user) {
       navigate("/login", { state: { returnTo: location.pathname } });
       return;
     }
 
     const item = toShopItem(product, quantity, selectedSize);
-    setAddedToCart(toggleShopItem("cart", item));
+    const currentItems = await loadShopItems("cart", user);
+    const result = await toggleShopItem("cart", item, currentItems, user);
+    setAddedToCart(result.isAdded);
   };
 
-  const handleWishlist = () => {
-    if (!getStoredUser()) {
+  const handleWishlist = async () => {
+    const user = getStoredUser();
+
+    if (!user) {
       navigate("/login", { state: { returnTo: location.pathname } });
       return;
     }
 
     const item = toShopItem(product, quantity, selectedSize);
-    setWishlisted(toggleShopItem("wishlist", item));
+    const currentItems = await loadShopItems("wishlist", user);
+    const result = await toggleShopItem("wishlist", item, currentItems, user);
+    setWishlisted(result.isAdded);
   };
 
   const placeOrder = async () => {
@@ -125,7 +139,6 @@ export default function Product() {
           paymentMethod: "Online",
         }),
       });
-      saveCompletedOrder(result.data, user);
       setCustomer({ name: "", phone: "", address: "" });
       navigate(`/order/completed/${result.data._id}`, { state: { order: result.data } });
     } catch (error) {
@@ -156,7 +169,7 @@ export default function Product() {
         <div className="flex min-h-[420px] items-center justify-center overflow-hidden rounded-3xl bg-white p-6 shadow-sm lg:self-start">
           {product.image ? (
             <img
-              src={product.image}
+              src={assetUrl(product.image)}
               alt={product.name}
               decoding="async"
               className="h-full max-h-[580px] w-full max-w-[680px] object-contain"

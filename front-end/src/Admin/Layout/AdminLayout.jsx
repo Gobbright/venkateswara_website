@@ -5,14 +5,6 @@ import { updateAdminProfile } from "../auth/jwtAuth";
 import AdminNav from "../Nav/AdminNav";
 import { apiRequest } from "../../utils/api";
 
-const defaultNotifications = [
-  { title: "New order received", detail: "ORD-1009 waiting for confirmation." },
-  { title: "Low stock alert", detail: "Festive Kurta stock is below 10." },
-  { title: "Video call scheduled", detail: "Customer Nisha booked an 11:00 AM call." },
-  { title: "Product updated", detail: "Mens Cotton Shirt price was changed." },
-  { title: "New user joined", detail: "A customer account was created today." },
-];
-
 const playOrderSound = () => {
   try {
     const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -45,7 +37,7 @@ export default function AdminLayout({ onLogout, onUserUpdate = () => {}, user })
     label: user?.label || "",
   });
   const [profileMessage, setProfileMessage] = useState("");
-  const [notifications, setNotifications] = useState(defaultNotifications);
+  const [notifications, setNotifications] = useState([]);
   const [orderToast, setOrderToast] = useState(null);
   const latestOrderIdRef = useRef("");
   const initializedOrdersRef = useRef(false);
@@ -66,7 +58,7 @@ export default function AdminLayout({ onLogout, onUserUpdate = () => {}, user })
           detail: `${order.orderCode || order._id || order.id} - ${order.customer} - Rs. ${Number(order.amount || 0).toLocaleString("en-IN")}`,
         }));
 
-        setNotifications(nextNotifications.length ? nextNotifications : defaultNotifications);
+        setNotifications(nextNotifications);
 
         if (!initializedOrdersRef.current) {
           initializedOrdersRef.current = true;
