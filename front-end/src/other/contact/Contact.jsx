@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useState } from "react";
 import { Mail, MapPin, Phone, Clock, Send } from "lucide-react";
+import { apiRequest } from "../../utils/api";
 
 const contactCards = [
   {
@@ -44,6 +45,41 @@ const branches = [
 ];
 
 const Contact = () => {
+  const [form, setForm] = useState({ name: "", phone: "", category: "", product: "", email: "", message: "" });
+  const [status, setStatus] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+
+  const updateField = (field, value) => {
+    setForm((current) => ({ ...current, [field]: value }));
+    setStatus("");
+  };
+
+  const submitEnquiry = async () => {
+    if (!form.name.trim() || !form.phone.trim()) {
+      setStatus("Name and phone fill pannunga.");
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      await apiRequest("/enquiries", {
+        method: "POST",
+        body: JSON.stringify({
+          name: form.name.trim(),
+          phone: form.phone.trim(),
+          email: form.email.trim(),
+          message: [form.category, form.product, form.message].filter(Boolean).join(" | "),
+        }),
+      });
+      setForm({ name: "", phone: "", category: "", product: "", email: "", message: "" });
+      setStatus("Enquiry MongoDB la saved.");
+    } catch (error) {
+      setStatus(error.message || "Enquiry send failed.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return (
     <section className="bg-[#FAF0E6] px-5 py-8 md:px-16 md:py-10" style={{ fontFamily: "'Poppins', sans-serif" }}>
       <div className="mx-auto max-w-6xl">
@@ -113,23 +149,28 @@ const Contact = () => {
           <form className="rounded-2xl bg-white p-7 shadow-[0_4px_20px_rgba(0,0,0,0.06)]">
             <h2 className="mb-5 text-2xl font-bold text-gray-900">Enquiry Form</h2>
             <div className="grid gap-4 sm:grid-cols-2">
-              <input className="rounded-full bg-orange-50 px-5 py-3 text-base outline-none focus:bg-white focus:ring-2 focus:ring-orange-300" placeholder="Your Name" />
-              <input className="rounded-full bg-orange-50 px-5 py-3 text-base outline-none focus:bg-white focus:ring-2 focus:ring-orange-300" placeholder="Phone Number" />
+              <input value={form.name} onChange={(event) => updateField("name", event.target.value)} className="rounded-full bg-orange-50 px-5 py-3 text-base outline-none focus:bg-white focus:ring-2 focus:ring-orange-300" placeholder="Your Name" />
+              <input value={form.phone} onChange={(event) => updateField("phone", event.target.value)} className="rounded-full bg-orange-50 px-5 py-3 text-base outline-none focus:bg-white focus:ring-2 focus:ring-orange-300" placeholder="Phone Number" />
             </div>
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
-              <select className="rounded-full bg-orange-50 px-5 py-3 text-base outline-none focus:bg-white focus:ring-2 focus:ring-orange-300">
+              <select value={form.category} onChange={(event) => updateField("category", event.target.value)} className="rounded-full bg-orange-50 px-5 py-3 text-base outline-none focus:bg-white focus:ring-2 focus:ring-orange-300">
                 <option>Product Category</option>
                 <option>Silk Sarees</option>
                 <option>Mens Wear</option>
                 <option>Kids Collection</option>
                 <option>Festive Wear</option>
               </select>
-              <input className="rounded-full bg-orange-50 px-5 py-3 text-base outline-none focus:bg-white focus:ring-2 focus:ring-orange-300" placeholder="Product / Size / Color" />
+              <input value={form.product} onChange={(event) => updateField("product", event.target.value)} className="rounded-full bg-orange-50 px-5 py-3 text-base outline-none focus:bg-white focus:ring-2 focus:ring-orange-300" placeholder="Product / Size / Color" />
             </div>
-            <input className="mt-4 w-full rounded-full bg-orange-50 px-5 py-3 text-base outline-none focus:bg-white focus:ring-2 focus:ring-orange-300" placeholder="Email Address" />
-            <textarea className="mt-4 min-h-32 w-full rounded-2xl bg-orange-50 px-5 py-4 text-base outline-none focus:bg-white focus:ring-2 focus:ring-orange-300" placeholder="Tell us what you are looking for..." />
-            <button type="button" className="mt-5 inline-flex items-center gap-2 rounded-full bg-orange-600 px-7 py-3 text-base font-semibold text-white transition hover:bg-gradient-to-r hover:from-orange-600 hover:via-[#FFBE8A] hover:to-[#4DA7AF]">
-              Send Enquiry
+            <input value={form.email} onChange={(event) => updateField("email", event.target.value)} className="mt-4 w-full rounded-full bg-orange-50 px-5 py-3 text-base outline-none focus:bg-white focus:ring-2 focus:ring-orange-300" placeholder="Email Address" />
+            <textarea value={form.message} onChange={(event) => updateField("message", event.target.value)} className="mt-4 min-h-32 w-full rounded-2xl bg-orange-50 px-5 py-4 text-base outline-none focus:bg-white focus:ring-2 focus:ring-orange-300" placeholder="Tell us what you are looking for..." />
+            {status && (
+              <p className="mt-4 rounded-2xl bg-orange-50 px-4 py-3 text-sm font-bold text-orange-700">
+                {status}
+              </p>
+            )}
+            <button type="button" onClick={submitEnquiry} disabled={isSaving} className="mt-5 inline-flex items-center gap-2 rounded-full bg-orange-600 px-7 py-3 text-base font-semibold text-white transition hover:bg-gradient-to-r hover:from-orange-600 hover:via-[#FFBE8A] hover:to-[#4DA7AF] disabled:cursor-not-allowed disabled:opacity-70">
+              {isSaving ? "Sending..." : "Send Enquiry"}
               <Send size={16} />
             </button>
           </form>

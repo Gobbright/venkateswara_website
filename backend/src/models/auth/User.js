@@ -7,6 +7,12 @@ const userSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    userCode: {
+      type: String,
+      trim: true,
+      unique: true,
+      sparse: true,
+    },
     email: {
       type: String,
       required: true,
@@ -15,6 +21,11 @@ const userSchema = new mongoose.Schema(
       unique: true,
     },
     phone: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    city: {
       type: String,
       trim: true,
       default: "",
@@ -39,6 +50,15 @@ const userSchema = new mongoose.Schema(
     startPath: {
       type: String,
       default: "/",
+    },
+    status: {
+      type: String,
+      enum: ["Active", "New", "Blocked", "Deleted"],
+      default: "Active",
+    },
+    deletedAt: {
+      type: Date,
+      default: null,
     },
   },
   { timestamps: true }

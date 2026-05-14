@@ -1,8 +1,12 @@
 import { useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Heart, ShoppingBag, ShoppingCart } from "lucide-react";
-import { getShopItems, removeShopItem, toggleShopItem } from "../../utils/shopItems";
+import { getShopItems, removeShopItem, saveShopItems, toggleShopItem } from "../../utils/shopItems";
+import { getStoredUser } from "../../utils/userSession";
 
 export default function Wishlist() {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [wishlistItems, setWishlistItems] = useState(() => getShopItems("wishlist"));
   const [cartItems, setCartItems] = useState(() => getShopItems("cart").map((item) => item.slug));
 
@@ -12,10 +16,46 @@ export default function Wishlist() {
   };
 
   const handleCartToggle = (item) => {
+    if (!getStoredUser()) {
+      navigate("/login", { state: { returnTo: location.pathname } });
+      return;
+    }
+
     const isAdded = toggleShopItem("cart", item);
     setCartItems((currentItems) =>
       isAdded ? [...currentItems, item.slug] : currentItems.filter((slug) => slug !== item.slug)
     );
+  };
+
+  const handleBuyNow = (item) => {
+    if (!getStoredUser()) {
+      navigate("/login", { state: { returnTo: location.pathname } });
+      return;
+    }
+
+    const currentCartItems = getShopItems("cart");
+    const nextCartItems = currentCartItems.some((cartItem) => cartItem.slug === item.slug)
+      ? currentCartItems
+      : [{ quantity: 1, size: "M", color: "Default", ...item }, ...currentCartItems];
+    saveShopItems("cart", nextCartItems);
+    navigate("/cart");
+  };
+
+  const handleAddAllToCart = () => {
+    if (!getStoredUser()) {
+      navigate("/login", { state: { returnTo: location.pathname } });
+      return;
+    }
+
+    const currentCartItems = getShopItems("cart");
+    const currentSlugs = new Set(currentCartItems.map((item) => item.slug));
+    const newItems = wishlistItems
+      .filter((item) => !currentSlugs.has(item.slug))
+      .map((item) => ({ quantity: 1, size: "M", color: "Default", ...item }));
+    const nextCartItems = [...newItems, ...currentCartItems];
+
+    saveShopItems("cart", nextCartItems);
+    setCartItems(nextCartItems.map((item) => item.slug));
   };
 
   return (
@@ -36,6 +76,7 @@ export default function Wishlist() {
         </div>
         <button
           type="button"
+          onClick={handleAddAllToCart}
           className="h-10 rounded-full bg-black px-5 text-sm font-semibold text-white transition hover:bg-orange-600"
         >
           Add All Cart
@@ -73,6 +114,8 @@ export default function Wishlist() {
                 <img
                   src={item.image}
                   alt={item.name}
+                  loading="lazy"
+                  decoding="async"
                   className="h-full w-full object-contain transition duration-300 group-hover:scale-105"
                 />
               </div>
@@ -113,6 +156,7 @@ export default function Wishlist() {
                   </button>
                   <button
                     type="button"
+                    onClick={() => handleBuyNow(item)}
                     className="flex h-9 items-center justify-center gap-1.5 rounded-full bg-gradient-to-r from-orange-600 to-[#4DA7AF] px-1 text-[11px] font-bold text-white transition hover:from-black hover:to-black sm:h-10 sm:px-3 sm:text-sm"
                   >
                     <ShoppingBag size={15} />

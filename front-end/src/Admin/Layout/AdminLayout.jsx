@@ -1,16 +1,39 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Bell, Check, Edit3, Menu, UserRound, X } from "lucide-react";
 import { Outlet } from "react-router-dom";
 import { updateAdminProfile } from "../auth/jwtAuth";
 import AdminNav from "../Nav/AdminNav";
+import { apiRequest } from "../../utils/api";
 
-const notifications = [
+const defaultNotifications = [
   { title: "New order received", detail: "ORD-1009 waiting for confirmation." },
   { title: "Low stock alert", detail: "Festive Kurta stock is below 10." },
   { title: "Video call scheduled", detail: "Customer Nisha booked an 11:00 AM call." },
   { title: "Product updated", detail: "Mens Cotton Shirt price was changed." },
   { title: "New user joined", detail: "A customer account was created today." },
 ];
+
+const playOrderSound = () => {
+  try {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    const audioContext = new AudioContext();
+    const oscillator = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+
+    oscillator.type = "sine";
+    oscillator.frequency.setValueAtTime(880, audioContext.currentTime);
+    oscillator.frequency.setValueAtTime(660, audioContext.currentTime + 0.12);
+    gain.gain.setValueAtTime(0.0001, audioContext.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.18, audioContext.currentTime + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.35);
+    oscillator.connect(gain);
+    gain.connect(audioContext.destination);
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + 0.38);
+  } catch (error) {
+    console.warn("Order notification sound blocked", error);
+  }
+};
 
 export default function AdminLayout({ onLogout, onUserUpdate = () => {}, user }) {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -22,6 +45,57 @@ export default function AdminLayout({ onLogout, onUserUpdate = () => {}, user })
     label: user?.label || "",
   });
   const [profileMessage, setProfileMessage] = useState("");
+  const [notifications, setNotifications] = useState(defaultNotifications);
+  const [orderToast, setOrderToast] = useState(null);
+  const latestOrderIdRef = useRef("");
+  const initializedOrdersRef = useRef(false);
+
+  useEffect(() => {
+    const loadOrderNotifications = async () => {
+      try {
+        const result = await apiRequest("/orders");
+        const latestOrder = result.data?.[0];
+
+        if (!latestOrder) {
+          return;
+        }
+
+        const latestOrderId = latestOrder.orderCode || latestOrder._id || latestOrder.id;
+        const nextNotifications = result.data.slice(0, 6).map((order) => ({
+          title: `Order ${order.status}`,
+          detail: `${order.orderCode || order._id || order.id} - ${order.customer} - Rs. ${Number(order.amount || 0).toLocaleString("en-IN")}`,
+        }));
+
+        setNotifications(nextNotifications.length ? nextNotifications : defaultNotifications);
+
+        if (!initializedOrdersRef.current) {
+          initializedOrdersRef.current = true;
+          latestOrderIdRef.current = latestOrderId;
+          return;
+        }
+
+        if (latestOrderId && latestOrderId !== latestOrderIdRef.current) {
+          latestOrderIdRef.current = latestOrderId;
+          const toast = {
+            title: "New order received",
+            detail: `${latestOrder.orderCode || latestOrder._id} - ${latestOrder.customer} - Rs. ${Number(latestOrder.amount || 0).toLocaleString("en-IN")}`,
+          };
+          console.log("Admin order notification", latestOrder);
+          setOrderToast(toast);
+          setNotifications((current) => [toast, ...current].slice(0, 8));
+          playOrderSound();
+          window.setTimeout(() => setOrderToast(null), 6500);
+        }
+      } catch (error) {
+        console.error("Admin order notification polling failed", error);
+      }
+    };
+
+    loadOrderNotifications();
+    const intervalId = window.setInterval(loadOrderNotifications, 10000);
+
+    return () => window.clearInterval(intervalId);
+  }, []);
 
   const openProfile = () => {
     setNotificationsOpen(false);
@@ -226,6 +300,28 @@ export default function AdminLayout({ onLogout, onUserUpdate = () => {}, user })
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {orderToast && (
+        <div className="fixed bottom-5 right-5 z-[120] w-[calc(100vw-2.5rem)] max-w-sm rounded-3xl border border-[#4DA7AF]/30 bg-white p-4 shadow-2xl">
+          <div className="flex items-start gap-3">
+            <span className="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#e9fbfc] text-[#23777f]">
+              <Bell size={18} />
+            </span>
+            <div>
+              <p className="text-sm font-extrabold text-slate-950">{orderToast.title}</p>
+              <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">{orderToast.detail}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setOrderToast(null)}
+              className="ml-auto flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-slate-800 hover:text-white"
+              aria-label="Close order notification"
+            >
+              <X size={15} />
+            </button>
           </div>
         </div>
       )}

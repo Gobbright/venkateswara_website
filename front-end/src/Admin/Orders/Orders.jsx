@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Edit3, PackageCheck, ShoppingCart, Truck, X, XCircle } from "lucide-react";
-import { orders } from "../data/adminData";
+import { orders as defaultOrders } from "../data/adminData";
+import { apiRequest } from "../../utils/api";
 
 const categoryFilters = [
   "All Category",
@@ -9,7 +10,6 @@ const categoryFilters = [
   "Womens",
   "Kids",
   "Festive",
-  "Daily Deal",
   "Accessories",
 ];
 
@@ -26,10 +26,25 @@ const statusFlow = ["Pending", "Confirmed", "Packed", "Delivered"];
 export default function Orders() {
   const { status } = useParams();
   const activeCategory = status ? decodeURIComponent(status) : "Overall";
-  const [orderList, setOrderList] = useState(orders);
+  const [orderList, setOrderList] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [categoryFilter, setCategoryFilter] = useState("All Category");
   const [dateFilter, setDateFilter] = useState("");
+  const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    const loadOrders = async () => {
+      try {
+        const result = await apiRequest("/orders");
+        setOrderList(result.data.length ? result.data : defaultOrders);
+      } catch (error) {
+        setOrderList(defaultOrders);
+        setMessage(error.message || "Orders load failed.");
+      }
+    };
+
+    loadOrders();
+  }, []);
 
   const statusFilteredOrders =
     activeCategory === "Overall"
@@ -63,20 +78,45 @@ export default function Orders() {
     }));
   };
 
-  const handleSave = () => {
-    setOrderList((currentOrders) =>
-      currentOrders.map((order) =>
-        order.id === selectedOrder.id ? selectedOrder : order
-      )
-    );
-    setSelectedOrder(null);
+  const handleSave = async () => {
+    if (!selectedOrder._id) {
+      setOrderList((currentOrders) =>
+        currentOrders.map((order) => (order.id === selectedOrder.id ? selectedOrder : order))
+      );
+      setSelectedOrder(null);
+      return;
+    }
+
+    try {
+      const result = await apiRequest(`/orders/${selectedOrder._id}`, {
+        method: "PUT",
+        body: JSON.stringify(selectedOrder),
+      });
+      setOrderList((currentOrders) =>
+        currentOrders.map((order) => (order._id === selectedOrder._id ? result.data : order))
+      );
+      setSelectedOrder(null);
+      setMessage("Order MongoDB la updated.");
+    } catch (error) {
+      setMessage(error.message || "Order update failed.");
+    }
   };
 
-  const handleDelete = () => {
-    setOrderList((currentOrders) =>
-      currentOrders.filter((order) => order.id !== selectedOrder.id)
-    );
-    setSelectedOrder(null);
+  const handleDelete = async () => {
+    if (!selectedOrder._id) {
+      setOrderList((currentOrders) => currentOrders.filter((order) => order.id !== selectedOrder.id));
+      setSelectedOrder(null);
+      return;
+    }
+
+    try {
+      await apiRequest(`/orders/${selectedOrder._id}`, { method: "DELETE" });
+      setOrderList((currentOrders) => currentOrders.filter((order) => order._id !== selectedOrder._id));
+      setSelectedOrder(null);
+      setMessage("Order deleted from MongoDB.");
+    } catch (error) {
+      setMessage(error.message || "Order delete failed.");
+    }
   };
 
   const handleNextMove = () => {
@@ -104,6 +144,12 @@ export default function Orders() {
           Category wise order table and status visual.
         </p>
       </div>
+
+      {message && (
+        <p className="mb-4 rounded-2xl bg-orange-50 px-4 py-3 text-sm font-bold text-orange-700">
+          {message}
+        </p>
+      )}
 
       <div className="hidden gap-4 sm:grid sm:grid-cols-2 xl:grid-cols-4">
         {summaryCards.map(({ label, value, icon: Icon }) => (
@@ -174,8 +220,8 @@ export default function Orders() {
             </thead>
             <tbody>
               {dateFilteredOrders.map((order) => (
-                <tr key={order.id} className="border-b border-slate-100 text-sm">
-                  <td className="px-5 py-4 font-extrabold text-slate-950">{order.id}</td>
+                <tr key={order._id || order.id} className="border-b border-slate-100 text-sm">
+                  <td className="px-5 py-4 font-extrabold text-slate-950">{order._id || order.id}</td>
                   <td className="px-5 py-4 font-semibold text-slate-600">{order.customer}</td>
                   <td className="px-5 py-4 font-semibold text-slate-600">{order.category}</td>
                   <td className="px-5 py-4 font-semibold text-slate-600">{order.product}</td>
@@ -196,7 +242,7 @@ export default function Orders() {
                       type="button"
                       onClick={() => setSelectedOrder(order)}
                       className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#e9fbfc] text-[#23777f] transition hover:bg-[#4DA7AF] hover:text-white"
-                      aria-label={`Edit ${order.id}`}
+                      aria-label={`Edit ${order._id || order.id}`}
                     >
                       <Edit3 size={17} />
                     </button>
@@ -237,7 +283,7 @@ export default function Orders() {
             <div className="grid gap-4 md:grid-cols-2">
               <label className="block">
                 <span className="mb-1 block text-xs font-extrabold uppercase tracking-[0.12em] text-slate-400">Order ID</span>
-                <input value={selectedOrder.id} readOnly className="h-11 w-full rounded-2xl bg-slate-100 px-4 text-sm font-bold text-slate-600 outline-none" />
+                <input value={selectedOrder._id || selectedOrder.id} readOnly className="h-11 w-full rounded-2xl bg-slate-100 px-4 text-sm font-bold text-slate-600 outline-none" />
               </label>
               <label className="block">
                 <span className="mb-1 block text-xs font-extrabold uppercase tracking-[0.12em] text-slate-400">Name</span>

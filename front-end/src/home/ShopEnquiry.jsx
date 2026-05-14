@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Headphones, Mail, MapPin, Phone, Send, Shirt, ShoppingBag } from "lucide-react";
 import bgImg from "../assets/Images/bg.png";
+import { apiRequest } from "../utils/api";
 
 const enquiryOptions = [
   "Silk Sarees",
@@ -27,8 +28,41 @@ const branches = [
 
 const ShopEnquiry = () => {
   const [activeBranchName, setActiveBranchName] = useState(branches[0].name);
+  const [form, setForm] = useState({ name: "", phone: "", category: "", product: "", message: "" });
+  const [message, setMessage] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
   const activeBranch =
     branches.find((branch) => branch.name === activeBranchName) ?? branches[0];
+
+  const updateField = (field, value) => {
+    setForm((current) => ({ ...current, [field]: value }));
+    setMessage("");
+  };
+
+  const submitEnquiry = async () => {
+    if (!form.name.trim() || !form.phone.trim()) {
+      setMessage("Name and phone fill pannunga.");
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      await apiRequest("/enquiries", {
+        method: "POST",
+        body: JSON.stringify({
+          name: form.name.trim(),
+          phone: form.phone.trim(),
+          message: [form.category, form.product, form.message].filter(Boolean).join(" | "),
+        }),
+      });
+      setForm({ name: "", phone: "", category: "", product: "", message: "" });
+      setMessage("Enquiry MongoDB la saved. Team contact pannuvanga.");
+    } catch (error) {
+      setMessage(error.message || "Enquiry send failed.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   return (
     <section
@@ -109,11 +143,15 @@ const ShopEnquiry = () => {
             <div className="grid gap-4 md:grid-cols-2">
               <input
                 type="text"
+                value={form.name}
+                onChange={(event) => updateField("name", event.target.value)}
                 placeholder="Your Name"
                 className="h-12 rounded-lg border border-orange-100 bg-orange-50 px-4 outline-none transition focus:border-orange-500 focus:bg-white"
               />
               <input
                 type="tel"
+                value={form.phone}
+                onChange={(event) => updateField("phone", event.target.value)}
                 placeholder="Phone Number"
                 className="h-12 rounded-lg border border-orange-100 bg-orange-50 px-4 outline-none transition focus:border-orange-500 focus:bg-white"
               />
@@ -122,7 +160,7 @@ const ShopEnquiry = () => {
             <div className="grid gap-4 md:grid-cols-2">
               <div className="relative">
                 <ShoppingBag className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                <select className="h-12 w-full appearance-none rounded-lg border border-orange-100 bg-orange-50 pl-11 pr-4 outline-none transition focus:border-orange-500 focus:bg-white">
+                <select value={form.category} onChange={(event) => updateField("category", event.target.value)} className="h-12 w-full appearance-none rounded-lg border border-orange-100 bg-orange-50 pl-11 pr-4 outline-none transition focus:border-orange-500 focus:bg-white">
                   <option>Product Category</option>
                   {enquiryOptions.map((option) => (
                     <option key={option}>{option}</option>
@@ -133,6 +171,8 @@ const ShopEnquiry = () => {
                 <Shirt className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                 <input
                   type="text"
+                  value={form.product}
+                  onChange={(event) => updateField("product", event.target.value)}
                   placeholder="Product / Size / Color"
                   className="h-12 w-full rounded-lg border border-orange-100 bg-orange-50 pl-11 pr-4 outline-none transition focus:border-orange-500 focus:bg-white"
                 />
@@ -141,16 +181,26 @@ const ShopEnquiry = () => {
 
             <textarea
               rows="5"
+              value={form.message}
+              onChange={(event) => updateField("message", event.target.value)}
               placeholder="Tell us what you are looking for..."
               className="resize-none rounded-lg border border-orange-100 bg-orange-50 px-4 py-3 outline-none transition focus:border-orange-500 focus:bg-white"
             />
 
             <button
               type="button"
+              onClick={submitEnquiry}
+              disabled={isSaving}
               className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-orange-600 px-7 font-bold text-white transition hover:bg-gradient-to-r hover:from-orange-600 hover:via-[#FFBE8A] hover:to-[#4DA7AF] md:w-fit"
             >
-              Send Enquiry <Send size={18} />
+              {isSaving ? "Sending..." : "Send Enquiry"} <Send size={18} />
             </button>
+
+            {message && (
+              <p className="rounded-2xl bg-orange-50 px-4 py-3 text-sm font-bold text-orange-700">
+                {message}
+              </p>
+            )}
 
             <div className="grid gap-4 rounded-lg bg-orange-50 p-4 text-sm text-slate-700">
               <div className="flex items-start gap-3">

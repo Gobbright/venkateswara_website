@@ -31,6 +31,15 @@ const isPasswordValid = (password, storedPassword) =>
     ? verifyPassword(password || "", storedPassword)
     : storedPassword === password;
 
+const createUserCode = async () => {
+  const users = await User.find({ userCode: /^USR-/ }).select("userCode");
+  const maxNumber = users.reduce((max, user) => {
+    const value = Number(user.userCode?.replace(/\D/g, "") || 0);
+    return Number.isFinite(value) ? Math.max(max, value) : max;
+  }, 0);
+  return `USR-${String(maxNumber + 1).padStart(3, "0")}`;
+};
+
 const adminPayload = (adminUser) => {
   const mappedRole = adminRoleMap[adminUser.role] || adminRoleMap.support_viewer;
 
@@ -48,9 +57,11 @@ const adminPayload = (adminUser) => {
 
 const authPayload = (user) => ({
   id: user._id,
+  userCode: user.userCode,
   email: user.email,
   name: user.name,
   phone: user.phone,
+  city: user.city,
   role: user.role,
   label: user.label,
   permissions: user.permissions,
@@ -97,7 +108,7 @@ export const getDemoAdmins = asyncHandler(async (req, res) => {
 });
 
 export const registerUser = asyncHandler(async (req, res) => {
-  const { name, email, phone = "", password } = req.body;
+  const { name, email, phone = "", city = "", password } = req.body;
 
   if (!name || !email || !password) {
     res.status(400);
@@ -113,9 +124,11 @@ export const registerUser = asyncHandler(async (req, res) => {
   }
 
   const user = await User.create({
+    userCode: await createUserCode(),
     name,
     email: normalizedEmail,
     phone,
+    city,
     password: hashPassword(password),
   });
 
@@ -152,6 +165,49 @@ export const loginAdmin = asyncHandler(async (req, res) => {
 
 export const getProfile = asyncHandler(async (req, res) => {
   sendAuthResponse(res, req.user);
+});
+
+export const getUsers = asyncHandler(async (req, res) => {
+  const users = await User.find({ status: { $ne: "Deleted" } }).select("-password").sort({ createdAt: -1 }).lean();
+  res.json({ success: true, data: users });
+});
+
+export const updateUser = asyncHandler(async (req, res) => {
+  const allowedFields = ["name", "phone", "email", "city", "status"];
+  const update = allowedFields.reduce((payload, field) => {
+    if (req.body[field] !== undefined) {
+      payload[field] = field === "email" ? req.body[field].trim().toLowerCase() : req.body[field];
+    }
+
+    return payload;
+  }, {});
+
+  const user = await User.findByIdAndUpdate(req.params.id, update, {
+    new: true,
+    runValidators: true,
+  }).select("-password");
+
+  if (!user) {
+    res.status(404);
+    throw new Error("User not found");
+  }
+
+  res.json({ success: true, data: user });
+});
+
+export const deleteUser = asyncHandler(async (req, res) => {
+  const user = await User.findByIdAndUpdate(
+    req.params.id,
+    { status: "Deleted", deletedAt: new Date() },
+    { new: true }
+  ).select("-password");
+
+  if (!user) {
+    res.status(404);
+    throw new Error("User not found");
+  }
+
+  res.json({ success: true, data: user });
 });
 
 export const updateProfile = asyncHandler(async (req, res) => {

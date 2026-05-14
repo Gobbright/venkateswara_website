@@ -1,23 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { AlertTriangle, Check, ImagePlus, Pencil, Trash2, X } from "lucide-react";
-import { categories } from "../data/adminData";
-import {
-  getDeletedProducts,
-  getStoredProducts,
-  saveDeletedProducts,
-  saveStoredProducts,
-  subscribeProductChanges,
-} from "../utils/productStore";
-
-const productFilters = [
-  "All",
-  "Mens",
-  "Womens",
-  "Kids",
-  "Festive",
-  "Daily Deal",
-  "Accessories",
-];
+import { categories as defaultCategories } from "../data/adminData";
+import { apiRequest } from "../../utils/api";
 
 const statusStyles = {
   Active: "bg-green-50 text-green-700",
@@ -25,7 +9,7 @@ const statusStyles = {
 };
 
 const taxOptions = ["0", "5", "12", "18", "28"];
-const sizeOptions = ["S", "M", "L", "XL"];
+const sizeOptions = ["S", "M", "L", "XL", "XXL", "Free Size"];
 
 const calculateDiscountedPrice = (price, discount) => {
   const priceValue = Number(price || 0);
@@ -46,25 +30,57 @@ const fileToDataUrl = (file) =>
     reader.readAsDataURL(file);
   });
 
+const normalizeCategories = (items) =>
+  items.map((category) => ({
+    ...category,
+    subcategories: (category.subcategories || [])
+      .filter((subcategory) => typeof subcategory === "string" || Number(subcategory.status ?? 1) === 1)
+      .map((subcategory) => (typeof subcategory === "string" ? subcategory : subcategory.name))
+      .filter(Boolean),
+  }));
+
+const parseSizes = (size) =>
+  String(size || "M")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+
 export default function ProductList() {
   const editImageInputRef = useRef(null);
+  const [categories, setCategories] = useState(defaultCategories);
   const [activeView, setActiveView] = useState("products");
   const [activeFilter, setActiveFilter] = useState("All");
-  const [products, setProducts] = useState(() => getStoredProducts());
-  const [deletedProducts, setDeletedProducts] = useState(() => getDeletedProducts());
+  const [products, setProducts] = useState([]);
+  const [deletedProducts, setDeletedProducts] = useState([]);
   const [message, setMessage] = useState("");
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(
-    () =>
-      subscribeProductChanges(() => {
-        setProducts(getStoredProducts());
-        setDeletedProducts(getDeletedProducts());
-      }),
-    []
-  );
+  const loadProducts = async () => {
+    setIsLoading(true);
+    try {
+      const [activeResult, deletedResult, categoryResult] = await Promise.all([
+        apiRequest("/products"),
+        apiRequest("/products?status=0"),
+        apiRequest("/categories"),
+      ]);
+      setProducts(activeResult.data);
+      setDeletedProducts(deletedResult.data);
+      if (categoryResult.data.length) {
+        setCategories(normalizeCategories(categoryResult.data));
+      }
+    } catch (error) {
+      setMessage(error.message || "Products load failed.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadProducts();
+  }, []);
 
   const filteredProducts =
     activeFilter === "All"
@@ -76,28 +92,32 @@ export default function ProductList() {
       ? "No products found for this filter."
       : "Deleted products empty.";
 
-  const updateProducts = (nextProducts, nextMessage) => {
-    setProducts(nextProducts);
-    saveStoredProducts(nextProducts);
-    setMessage(nextMessage);
-  };
-
-  const updateDeletedProducts = (nextProducts) => {
-    setDeletedProducts(nextProducts);
-    saveDeletedProducts(nextProducts);
-  };
-
   const startEdit = (product) => {
-    setEditingId(product.id);
+    setEditingId(product._id);
     setEditForm({
       ...product,
       price: product.originalPrice ?? product.price,
+      sizes: parseSizes(product.size),
     });
     setMessage("");
   };
 
   const updateEditField = (field, value) => {
     setEditForm((current) => ({ ...current, [field]: value }));
+  };
+
+  const toggleEditSize = (size) => {
+    setEditForm((current) => {
+      const currentSizes = current.sizes || parseSizes(current.size);
+      const nextSizes = currentSizes.includes(size)
+        ? currentSizes.filter((item) => item !== size)
+        : [...currentSizes, size];
+
+      return {
+        ...current,
+        sizes: nextSizes.length ? nextSizes : ["M"],
+      };
+    });
   };
 
   const handleEditImageChange = async (event) => {
@@ -111,31 +131,37 @@ export default function ProductList() {
     updateEditField("image", image);
   };
 
-  const saveEdit = () => {
+  const saveEdit = async () => {
     if (!editForm?.name?.trim() || editForm.price === "" || editForm.stock === "") {
       setMessage("Name, price, stock fill pannunga.");
       return;
     }
 
-    const nextProducts = products.map((product) =>
-      product.id === editingId
-        ? {
-            ...product,
-            ...editForm,
-            name: editForm.name.trim(),
-            originalPrice: Number(editForm.price),
-            price: calculateDiscountedPrice(editForm.price, editForm.discount),
-            stock: Number(editForm.stock),
-            tax: Number(editForm.tax || 0),
-            size: editForm.size || "M",
-            discount: editForm.discount === "" ? 0 : Number(editForm.discount || 0),
-            hsn: editForm.hsn?.trim() || "",
-          }
-        : product
-    );
-    updateProducts(nextProducts, "Product updated.");
-    setEditingId(null);
-    setEditForm(null);
+    try {
+      const payload = {
+        ...editForm,
+        name: editForm.name.trim(),
+        originalPrice: Number(editForm.price),
+        price: calculateDiscountedPrice(editForm.price, editForm.discount),
+        stock: Number(editForm.stock),
+        tax: Number(editForm.tax || 0),
+        size: (editForm.sizes || parseSizes(editForm.size)).join(", "),
+        discount: editForm.discount === "" ? 0 : Number(editForm.discount || 0),
+        hsn: editForm.hsn?.trim() || "",
+      };
+      const result = await apiRequest(`/products/${editingId}`, {
+        method: "PUT",
+        body: JSON.stringify(payload),
+      });
+      setProducts((currentProducts) =>
+        currentProducts.map((product) => (product._id === editingId ? result.data : product))
+      );
+      setMessage("Product MongoDB la updated.");
+      setEditingId(null);
+      setEditForm(null);
+    } catch (error) {
+      setMessage(error.message || "Product update failed.");
+    }
   };
 
   const cancelEdit = () => {
@@ -149,22 +175,21 @@ export default function ProductList() {
     setMessage("");
   };
 
-  const deleteProduct = () => {
+  const deleteProduct = async () => {
     if (!deleteTarget) {
       return;
     }
 
-    const nextProducts = products.filter((product) => product.id !== deleteTarget.id);
-    updateProducts(nextProducts, "Product moved to deleted products.");
-    updateDeletedProducts([
-      {
-        ...deleteTarget,
-        deletedAt: new Date().toLocaleString("en-IN"),
-      },
-      ...deletedProducts.filter((product) => product.id !== deleteTarget.id),
-    ]);
-    setActiveView("deleted");
-    setDeleteTarget(null);
+    try {
+      const result = await apiRequest(`/products/${deleteTarget._id}`, { method: "DELETE" });
+      setProducts((currentProducts) => currentProducts.filter((product) => product._id !== deleteTarget._id));
+      setDeletedProducts((currentProducts) => [result.data, ...currentProducts]);
+      setMessage("Product status 0 aachu. DB la delete agala.");
+      setActiveView("deleted");
+      setDeleteTarget(null);
+    } catch (error) {
+      setMessage(error.message || "Product delete failed.");
+    }
   };
 
   const activeEditCategory = editForm?.category ?? categories[0].name;
@@ -189,7 +214,7 @@ export default function ProductList() {
       <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
         <div className="border-b border-slate-100 px-5 py-4">
           <div className="flex flex-wrap gap-2">
-            {productFilters.map((filter) => (
+            {["All", ...categories.map((category) => category.name)].map((filter) => (
               <button
                 key={filter}
                 type="button"
@@ -221,28 +246,22 @@ export default function ProductList() {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[1240px] text-left">
+          <table className="w-full min-w-[920px] text-left">
             <thead>
               <tr className="border-b border-slate-100 text-xs uppercase tracking-[0.12em] text-slate-400">
                 <th className="px-5 py-4 font-extrabold">Image</th>
-                <th className="px-5 py-4 font-extrabold">Product ID</th>
                 <th className="px-5 py-4 font-extrabold">Name</th>
                 <th className="px-5 py-4 font-extrabold">Category</th>
-                <th className="px-5 py-4 font-extrabold">Subcategory</th>
                 <th className="px-5 py-4 font-extrabold">Price</th>
-                <th className="px-5 py-4 font-extrabold">Tax</th>
                 <th className="px-5 py-4 font-extrabold">Size</th>
-                <th className="px-5 py-4 font-extrabold">Discount</th>
-                <th className="px-5 py-4 font-extrabold">HSN</th>
                 <th className="px-5 py-4 font-extrabold">Stock</th>
-                <th className="px-5 py-4 font-extrabold">Status</th>
                 {activeView === "deleted" && <th className="px-5 py-4 font-extrabold">Deleted At</th>}
-                <th className="px-5 py-4 font-extrabold">Actions</th>
+                <th className="px-5 py-4 font-extrabold">Last Action</th>
               </tr>
             </thead>
             <tbody>
               {visibleProducts.map((product) => (
-                <tr key={product.id} className="border-b border-slate-100 text-sm">
+                <tr key={product._id} className="border-b border-slate-100 text-sm">
                   <td className="px-5 py-4">
                     {product.image ? (
                       <img src={product.image} alt={product.name} className="h-12 w-12 rounded-2xl object-cover" />
@@ -252,32 +271,38 @@ export default function ProductList() {
                       </div>
                     )}
                   </td>
-                  <td className="px-5 py-4 font-extrabold text-slate-950">{product.id}</td>
-                  <td className="px-5 py-4 font-semibold text-slate-700">{product.name}</td>
-                  <td className="px-5 py-4 font-semibold text-slate-600">{product.category}</td>
-                  <td className="px-5 py-4 font-semibold text-slate-600">{product.subcategory}</td>
+                  <td className="px-5 py-4">
+                    <p className="font-extrabold text-slate-950">{product.name}</p>
+                    <p className="mt-1 text-xs font-bold text-slate-400">
+                      {product.productCode || `PRD-${String(product._id).slice(-5).toUpperCase()}`}
+                    </p>
+                  </td>
+                  <td className="px-5 py-4">
+                    <p className="font-bold text-slate-700">{product.category}</p>
+                    <p className="mt-1 text-xs font-semibold text-slate-400">{product.subcategory || "-"}</p>
+                  </td>
                   <td className="px-5 py-4">
                     <p className="font-extrabold text-[#23777f]">
                       Rs. {Number(product.price).toLocaleString("en-IN")}
                     </p>
+                    <p className="mt-1 text-xs font-semibold text-orange-600">{Number(product.discount || 0)}% off</p>
                     {product.originalPrice && Number(product.originalPrice) !== Number(product.price) && (
                       <p className="text-xs font-semibold text-slate-400 line-through">
                         Rs. {Number(product.originalPrice).toLocaleString("en-IN")}
                       </p>
                     )}
                   </td>
-                  <td className="px-5 py-4 font-semibold text-slate-600">{Number(product.tax || 0)}%</td>
                   <td className="px-5 py-4 font-semibold text-slate-600">{product.size || "-"}</td>
-                  <td className="px-5 py-4 font-semibold text-slate-600">{Number(product.discount || 0)}%</td>
-                  <td className="px-5 py-4 font-semibold text-slate-600">{product.hsn || "-"}</td>
-                  <td className="px-5 py-4 font-semibold text-slate-600">{product.stock}</td>
                   <td className="px-5 py-4">
-                    <span className={`rounded-full px-3 py-1 text-xs font-extrabold ${statusStyles[product.status]}`}>
-                      {product.status}
+                    <p className="font-extrabold text-slate-700">{product.stock}</p>
+                    <span className={`mt-1 inline-flex rounded-full px-3 py-1 text-xs font-extrabold ${statusStyles[product.stockStatus] ?? "bg-slate-100 text-slate-600"}`}>
+                      {product.stockStatus || "Active"}
                     </span>
                   </td>
                   {activeView === "deleted" && (
-                    <td className="px-5 py-4 font-semibold text-slate-600">{product.deletedAt || "-"}</td>
+                    <td className="px-5 py-4 font-semibold text-slate-600">
+                      {product.deletedAt ? new Date(product.deletedAt).toLocaleString("en-IN") : "-"}
+                    </td>
                   )}
                   <td className="px-5 py-4">
                     {activeView === "products" ? (
@@ -307,8 +332,8 @@ export default function ProductList() {
               ))}
               {visibleProducts.length === 0 && (
                 <tr>
-                  <td colSpan={activeView === "deleted" ? 14 : 13} className="px-5 py-10 text-center text-sm font-bold text-slate-500">
-                    {emptyMessage}
+                  <td colSpan={activeView === "deleted" ? 8 : 7} className="px-5 py-10 text-center text-sm font-bold text-slate-500">
+                    {isLoading ? "Loading products..." : emptyMessage}
                   </td>
                 </tr>
               )}
@@ -323,7 +348,7 @@ export default function ProductList() {
             <div className="mb-5 flex items-start justify-between gap-4">
               <div>
                 <h3 className="text-xl font-extrabold text-slate-950">Edit Product</h3>
-                <p className="mt-1 text-sm font-semibold text-slate-500">{editingId} product details update pannunga.</p>
+                <p className="mt-1 text-sm font-semibold text-slate-500">Product details update pannunga.</p>
               </div>
               <button
                 type="button"
@@ -411,14 +436,12 @@ export default function ProductList() {
                   className="h-12 rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold outline-none focus:border-[#4DA7AF] focus:bg-white"
                   placeholder="Stock"
                 />
-                <select
-                  value={editForm.status}
-                  onChange={(event) => updateEditField("status", event.target.value)}
-                  className="h-12 rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold outline-none focus:border-[#4DA7AF] focus:bg-white"
-                >
-                  <option>Active</option>
-                  <option>Low Stock</option>
-                </select>
+                <input
+                  value={editForm.productCode || ""}
+                  readOnly
+                  className="h-12 rounded-2xl border border-slate-200 bg-slate-100 px-4 text-sm font-semibold text-slate-500 outline-none"
+                  placeholder="Product Code"
+                />
               </div>
               <div className="grid gap-4 sm:grid-cols-4">
                 <select
@@ -432,17 +455,22 @@ export default function ProductList() {
                     </option>
                   ))}
                 </select>
-                <select
-                  value={editForm.size || "M"}
-                  onChange={(event) => updateEditField("size", event.target.value)}
-                  className="h-12 rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold outline-none focus:border-[#4DA7AF] focus:bg-white"
-                >
+                <div className="flex min-h-12 flex-wrap items-center gap-1.5 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2">
                   {sizeOptions.map((size) => (
-                    <option key={size} value={size}>
-                      Size {size}
-                    </option>
+                    <button
+                      key={size}
+                      type="button"
+                      onClick={() => toggleEditSize(size)}
+                      className={`h-8 rounded-full border px-2.5 text-[11px] font-extrabold transition ${
+                        (editForm.sizes || parseSizes(editForm.size)).includes(size)
+                          ? "border-[#4DA7AF] bg-[#4DA7AF] text-white"
+                          : "border-slate-200 bg-white text-slate-700 hover:border-[#4DA7AF]"
+                      }`}
+                    >
+                      {size}
+                    </button>
                   ))}
-                </select>
+                </div>
                 <input
                   value={editForm.discount ?? ""}
                   type="number"

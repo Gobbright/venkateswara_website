@@ -1,10 +1,21 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { CreditCard } from 'lucide-react';
 import { getShopItems, removeShopItem, saveShopItems } from '../../utils/shopItems';
+import { apiRequest } from '../../utils/api';
+import { saveCompletedOrder } from '../../utils/orderTracking';
+import { getStoredUser } from '../../utils/userSession';
 
 export default function Cart() {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [cartItems, setCartItems] = useState(() => getShopItems("cart"));
+  const [customer, setCustomer] = useState(() => {
+    const user = getStoredUser();
+    return { name: user?.name || "", phone: user?.phone || "", address: "" };
+  });
+  const [message, setMessage] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
 
   const updateQuantity = (slug, change) => {
     const nextItems = cartItems.map((item) =>
@@ -33,6 +44,60 @@ export default function Cart() {
   const deliveryFee = subtotal === 0 || subtotal > 999 ? 0 : 99;
   const total = subtotal + deliveryFee;
 
+  const checkout = async () => {
+    const user = getStoredUser();
+
+    if (!user) {
+      navigate("/login", { state: { returnTo: location.pathname } });
+      return;
+    }
+
+    if (!cartItems.length) {
+      setMessage("Cart empty da.");
+      return;
+    }
+
+    if (!customer.name.trim() || !customer.phone.trim() || !customer.address.trim()) {
+      setMessage("Checkout ku name, phone, address fill pannunga.");
+      return;
+    }
+
+    const now = new Date();
+    setIsSaving(true);
+    setMessage("");
+
+    try {
+      const result = await apiRequest("/orders", {
+        method: "POST",
+        body: JSON.stringify({
+          userId: user.id,
+          email: user.email,
+          customer: customer.name.trim(),
+          phone: customer.phone.trim(),
+          address: customer.address.trim(),
+          category: cartItems[0]?.category || "Cart",
+          product: cartItems.map((item) => `${item.name} x ${item.quantity || 1}`).join(", "),
+          items: cartItems,
+          amount: total,
+          date: now.toISOString().slice(0, 10),
+          time: now.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }),
+          status: "Confirmed",
+          paymentStatus: "Verified",
+          paymentMethod: "Online",
+        }),
+      });
+      saveCompletedOrder(result.data, user);
+      saveShopItems("cart", []);
+      setCartItems([]);
+      setCustomer({ name: "", phone: "", address: "" });
+      navigate(`/order/completed/${result.data._id}`, { state: { order: result.data } });
+    } catch (error) {
+      setMessage(error.message || "Order checkout failed.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#f5ede3] p-3 sm:p-4 md:p-6">
       <div className="mb-4 shrink-0 text-center">
@@ -54,6 +119,8 @@ export default function Cart() {
                   <img
                     src={item.image}
                     alt={item.name}
+                    loading="lazy"
+                    decoding="async"
                     className="h-full w-full object-contain"
                   />
                 </div>
@@ -92,7 +159,7 @@ export default function Cart() {
                       </div>
                       <p className="mt-0.5 text-sm font-medium text-gray-600">
                         Item total: Rs.{" "}
-                        {(item.price * item.quantity).toLocaleString("en-IN")}
+                        {(item.price * (item.quantity || 1)).toLocaleString("en-IN")}
                       </p>
                     </div>
 
@@ -161,12 +228,41 @@ export default function Cart() {
             </span>
           </div>
 
+          <div className="mt-4 grid gap-3">
+            <input
+              value={customer.name}
+              onChange={(event) => setCustomer((current) => ({ ...current, name: event.target.value }))}
+              className="h-11 rounded-full bg-white px-4 text-sm font-semibold outline-none ring-1 ring-black/10 focus:ring-orange-300"
+              placeholder="Customer name"
+            />
+            <input
+              value={customer.phone}
+              onChange={(event) => setCustomer((current) => ({ ...current, phone: event.target.value }))}
+              className="h-11 rounded-full bg-white px-4 text-sm font-semibold outline-none ring-1 ring-black/10 focus:ring-orange-300"
+              placeholder="Phone number"
+            />
+            <textarea
+              value={customer.address}
+              onChange={(event) => setCustomer((current) => ({ ...current, address: event.target.value }))}
+              className="min-h-20 rounded-2xl bg-white px-4 py-3 text-sm font-semibold outline-none ring-1 ring-black/10 focus:ring-orange-300"
+              placeholder="Delivery address"
+            />
+          </div>
+
+          {message && (
+            <p className="mt-4 rounded-2xl bg-orange-50 px-4 py-3 text-sm font-bold text-orange-700">
+              {message}
+            </p>
+          )}
+
           <button
             type="button"
+            onClick={checkout}
+            disabled={isSaving}
             className="mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-full bg-black px-5 text-base font-semibold text-white transition hover:bg-orange-600"
           >
             <CreditCard size={18} />
-            Checkout
+            {isSaving ? "Verifying..." : "Verify Payment & Checkout"}
           </button>
           <Link
             to="/mens"

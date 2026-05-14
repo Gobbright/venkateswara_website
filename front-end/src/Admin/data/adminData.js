@@ -3,7 +3,6 @@ export const orderCategories = [
   "Womens",
   "Kids",
   "Festive",
-  "Daily Deal",
   "Accessories",
 ];
 
@@ -12,7 +11,7 @@ export const orders = [
   { id: "ORD-1002", customer: "Meena R", phone: "9876501234", address: "KK Nagar, Madurai", category: "Womens", product: "Silk Saree", amount: 2499, status: "Packed", date: "2026-05-09", time: "11:40 AM" },
   { id: "ORD-1003", customer: "Kavin S", phone: "9123456780", address: "Srirangam, Trichy", category: "Kids", product: "Kids Combo", amount: 899, status: "Delivered", date: "2026-05-08", time: "02:20 PM" },
   { id: "ORD-1004", customer: "Prakash", phone: "9988776655", address: "Anna Nagar, Madurai", category: "Festive", product: "Festive Kurta", amount: 1799, status: "Packed", date: "2026-05-08", time: "04:05 PM" },
-  { id: "ORD-1005", customer: "Divya", phone: "9090909090", address: "Thillai Nagar, Trichy", category: "Daily Deal", product: "Offer Top", amount: 499, status: "Confirmed", date: "2026-05-07", time: "09:55 AM" },
+  { id: "ORD-1005", customer: "Divya", phone: "9090909090", address: "Thillai Nagar, Trichy", category: "Womens", product: "Offer Top", amount: 499, status: "Confirmed", date: "2026-05-07", time: "09:55 AM" },
   { id: "ORD-1006", customer: "Siva", phone: "9000011111", address: "Melur, Madurai", category: "Accessories", product: "Leather Belt", amount: 399, status: "Cancelled", date: "2026-05-07", time: "01:10 PM" },
   { id: "ORD-1007", customer: "Nisha", phone: "9444412345", address: "Woraiyur, Trichy", category: "Womens", product: "Kurti", amount: 799, status: "Delivered", date: "2026-05-06", time: "05:35 PM" },
   { id: "ORD-1008", customer: "Ramesh", phone: "9555522222", address: "Tallakulam, Madurai", category: "Mens", product: "Track Pant", amount: 699, status: "Packed", date: "2026-05-06", time: "07:15 PM" },
@@ -23,7 +22,6 @@ export const categories = [
   { name: "Womens", count: 42, subcategories: ["Sarees", "Kurtis", "Tops", "Jeans", "Leggings", "Ethnic Wear", "Accessories"] },
   { name: "Kids", count: 24, subcategories: ["Boys Wear", "Girls Wear", "Infant Wear", "Kids Accessories"] },
   { name: "Festive", count: 18, subcategories: ["Silk Sarees", "Kurta Sets", "Family Combo", "Wedding Wear"] },
-  { name: "Daily Deal", count: 12, subcategories: ["Mens Deals", "Womens Deals", "Kids Deals", "Accessories Deals"] },
   { name: "Accessories", count: 16, subcategories: ["Mens Accessories", "Womens Accessories", "Kids Accessories"] },
 ];
 
@@ -41,7 +39,7 @@ export const products = [
   { id: "PRD-104", name: "Womens Kurti", category: "Womens", subcategory: "Kurtis", price: 799, stock: 28, status: "Active" },
   { id: "PRD-105", name: "Kids Festive Set", category: "Kids", subcategory: "Boys Wear", price: 1199, stock: 16, status: "Active" },
   { id: "PRD-106", name: "Festive Kurta", category: "Festive", subcategory: "Kurta Sets", price: 1799, stock: 9, status: "Low Stock" },
-  { id: "PRD-107", name: "Offer Top", category: "Daily Deal", subcategory: "Womens Deals", price: 499, stock: 30, status: "Active" },
+  { id: "PRD-107", name: "Offer Top", category: "Womens", subcategory: "Tops", price: 499, stock: 30, status: "Active" },
   { id: "PRD-108", name: "Leather Belt", category: "Accessories", subcategory: "Mens Accessories", price: 399, stock: 34, status: "Active" },
 ];
 

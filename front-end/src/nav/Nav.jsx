@@ -37,6 +37,7 @@ const Nav = () => {
     // { name: "Tailoring", path: "/ot  her/tailoring" },
     { name: "About", path: "/other/about" },
     { name: "Contact", path: "/other/contact" },
+    { name: "My Orders", path: "/my-orders" },
     { name: "Track Order", path: "/order/track" },
   ];
 
@@ -218,8 +219,8 @@ const Nav = () => {
             <span className="flex items-center gap-1 text-sm md:text-base">
               <MapPin size={16} /> Tennur,Tiruchirappalli
             </span>
-            <Link to="/order/track" className="flex items-center gap-1 text-sm md:text-base !no-underline text-white transition">
-              <Truck size={16} /> Track Order
+            <Link to="/my-orders" className="flex items-center gap-1 text-sm md:text-base !no-underline text-white transition">
+              <Truck size={16} /> My Orders
             </Link>
             <button
               type="button"
@@ -615,6 +616,13 @@ const Nav = () => {
                 <p>Email: {currentUser.email}</p>
                 <p>Role: {currentUser.role}</p>
               </div>
+              <Link
+                to="/my-orders"
+                onClick={() => setProfileOpen(false)}
+                className="flex h-11 items-center justify-center rounded-full bg-white/75 px-4 text-sm font-bold text-[#23777f] transition !no-underline ring-1 ring-[#4DA7AF]/25 hover:bg-[#e9fbfc]"
+              >
+                My Orders
+              </Link>
 
               {profileError && (
                 <p className="rounded-xl bg-red-50 px-4 py-3 text-sm font-bold text-red-700">

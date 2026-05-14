@@ -3,11 +3,11 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "main": "src/server.js",
+  "main": "src/server/server.js",
   "scripts": {
-    "dev": "nodemon src/server.js",
-    "start": "node src/server.js",
-    "check": "node --check src/server.js"
+    "dev": "nodemon src/server/server.js",
+    "start": "node src/server/server.js",
+    "check": "node --check src/server/server.js"
   },
   "dependencies": {
     "cors": "^2.8.5",

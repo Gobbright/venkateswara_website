@@ -1,12 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { ImagePlus, PackagePlus } from "lucide-react";
-import { categories } from "../data/adminData";
-import {
-  createProductId,
-  getStoredProducts,
-  saveStoredProducts,
-} from "../utils/productStore";
+import { categories as defaultCategories } from "../data/adminData";
+import { apiRequest } from "../../utils/api";
 
 const emptyForm = {
   name: "",
@@ -14,14 +10,17 @@ const emptyForm = {
   price: "",
   stock: "",
   tax: "5",
-  size: "M",
+  sizes: ["M"],
   discount: "",
   hsn: "",
   image: "",
 };
 
 const taxOptions = ["0", "5", "12", "18", "28"];
-const sizeOptions = ["S", "M", "L", "XL"];
+const sizeOptions = ["S", "M", "L", "XL", "XXL", "Free Size"];
+const discountOptions = ["5", "10", "20"];
+const stockOptions = ["20", "50", "100"];
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 
 const calculateDiscountedPrice = (price, discount) => {
   const priceValue = Number(price || 0);
@@ -42,12 +41,24 @@ const fileToDataUrl = (file) =>
     reader.readAsDataURL(file);
   });
 
-export default function ProductAdd({ initialCategory = categories[0].name }) {
+const normalizeCategories = (items) =>
+  items.map((category) => ({
+    ...category,
+    subcategories: (category.subcategories || [])
+      .filter((subcategory) => typeof subcategory === "string" || Number(subcategory.status ?? 1) === 1)
+      .map((subcategory) => (typeof subcategory === "string" ? subcategory : subcategory.name))
+      .filter(Boolean),
+  }));
+
+export default function ProductAdd({ initialCategory = defaultCategories[0].name }) {
   const { categoryName } = useParams();
   const imageInputRef = useRef(null);
   const routeCategory = categoryName ? decodeURIComponent(categoryName) : initialCategory;
+  const [categories, setCategories] = useState(defaultCategories);
   const [selectedCategory, setSelectedCategory] = useState(routeCategory);
   const [form, setForm] = useState(emptyForm);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState("");
   const selectedCategoryData = categories.find((category) => category.name === selectedCategory) ?? categories[0];
   const discountedPrice = calculateDiscountedPrice(form.price, form.discount);
@@ -55,6 +66,21 @@ export default function ProductAdd({ initialCategory = categories[0].name }) {
   useEffect(() => {
     setSelectedCategory(routeCategory);
   }, [routeCategory]);
+
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const result = await apiRequest("/categories");
+        if (result.data.length) {
+          setCategories(normalizeCategories(result.data));
+        }
+      } catch {
+        setCategories(defaultCategories);
+      }
+    };
+
+    loadCategories();
+  }, []);
 
   useEffect(() => {
     setForm((current) => ({
@@ -68,6 +94,20 @@ export default function ProductAdd({ initialCategory = categories[0].name }) {
     setMessage("");
   };
 
+  const toggleSize = (size) => {
+    setForm((current) => {
+      const selectedSizes = current.sizes.includes(size)
+        ? current.sizes.filter((item) => item !== size)
+        : [...current.sizes, size];
+
+      return {
+        ...current,
+        sizes: selectedSizes.length ? selectedSizes : ["M"],
+      };
+    });
+    setMessage("");
+  };
+
   const handleImageChange = async (event) => {
     const file = event.target.files?.[0];
 
@@ -75,11 +115,22 @@ export default function ProductAdd({ initialCategory = categories[0].name }) {
       return;
     }
 
+    if (file.size > MAX_IMAGE_SIZE) {
+      setSelectedImage(null);
+      updateField("image", "");
+      if (imageInputRef.current) {
+        imageInputRef.current.value = "";
+      }
+      setMessage("Image size 5MB-kulla irukkanum.");
+      return;
+    }
+
     const image = await fileToDataUrl(file);
+    setSelectedImage(file);
     updateField("image", image);
   };
 
-  const handleAddProduct = (event) => {
+  const handleAddProduct = async (event) => {
     event.preventDefault();
 
     if (!form.name.trim() || form.price === "" || form.stock === "") {
@@ -87,9 +138,7 @@ export default function ProductAdd({ initialCategory = categories[0].name }) {
       return;
     }
 
-    const productList = getStoredProducts();
-    const newProduct = {
-      id: createProductId(productList),
+    const productPayload = {
       name: form.name.trim(),
       category: selectedCategory,
       subcategory: form.subcategory || selectedCategoryData.subcategories[0],
@@ -97,22 +146,34 @@ export default function ProductAdd({ initialCategory = categories[0].name }) {
       price: discountedPrice,
       stock: Number(form.stock),
       tax: Number(form.tax),
-      size: form.size,
+      size: form.sizes.join(", "),
       discount: form.discount === "" ? 0 : Number(form.discount),
       hsn: form.hsn.trim(),
-      status: Number(form.stock) <= 10 ? "Low Stock" : "Active",
       image: form.image,
     };
 
-    saveStoredProducts([newProduct, ...productList]);
-    setForm({
-      ...emptyForm,
-      subcategory: selectedCategoryData.subcategories[0] ?? "",
-    });
-    if (imageInputRef.current) {
-      imageInputRef.current.value = "";
+    try {
+      setIsSubmitting(true);
+      setMessage("");
+
+      const result = await apiRequest("/products", {
+        method: "POST",
+        body: JSON.stringify(productPayload),
+      });
+      setForm({
+        ...emptyForm,
+        subcategory: selectedCategoryData.subcategories[0] ?? "",
+      });
+      setSelectedImage(null);
+      if (imageInputRef.current) {
+        imageInputRef.current.value = "";
+      }
+      setMessage(`${result.data.name} MongoDB la added successfully.`);
+    } catch (error) {
+      setMessage(error.message || "Product add panna mudiyala. Try again.");
+    } finally {
+      setIsSubmitting(false);
     }
-    setMessage(`${newProduct.name} added successfully.`);
   };
 
   return (
@@ -124,8 +185,8 @@ export default function ProductAdd({ initialCategory = categories[0].name }) {
         </p>
       </div>
 
-      <div className="mx-auto max-w-3xl">
-        <form onSubmit={handleAddProduct} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="mx-auto max-w-7xl">
+        <form onSubmit={handleAddProduct} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="mb-5 flex items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#e9fbfc] text-[#23777f]">
               <PackagePlus size={22} />
@@ -136,13 +197,77 @@ export default function ProductAdd({ initialCategory = categories[0].name }) {
           </div>
 
           <div className="grid gap-4">
-            <input
-              value={form.name}
-              onChange={(event) => updateField("name", event.target.value)}
-              className="h-12 rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold outline-none focus:border-[#4DA7AF] focus:bg-white"
-              placeholder="Product Name"
-            />
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid items-start gap-4 lg:grid-cols-2">
+              <input
+                value={form.name}
+                onChange={(event) => updateField("name", event.target.value)}
+                className="h-12 rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold outline-none focus:border-[#4DA7AF] focus:bg-white"
+                placeholder="Product Name"
+              />
+              <div>
+                <input ref={imageInputRef} type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
+                <button
+                  type="button"
+                  onClick={() => imageInputRef.current?.click()}
+                  className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-[#4DA7AF] bg-[#e9fbfc] px-3 text-xs font-extrabold text-[#23777f] transition hover:bg-white"
+                >
+                  {form.image ? (
+                    <>
+                      <img src={form.image} alt="Product preview" className="h-7 w-7 rounded-lg object-cover" />
+                      <span>Change Product Image</span>
+                    </>
+                  ) : (
+                    <>
+                      <ImagePlus size={20} />
+                      <span>Product Image Upload</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+            <div className="grid gap-4 lg:grid-cols-3">
+              <input
+                value={form.price}
+                onChange={(event) => updateField("price", event.target.value)}
+                type="number"
+                min="1"
+                className="h-12 rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold outline-none focus:border-[#4DA7AF] focus:bg-white"
+                placeholder="Original Price"
+              />
+              <div className="grid gap-2">
+                <input
+                  value={form.discount}
+                  onChange={(event) => updateField("discount", event.target.value)}
+                  type="number"
+                  min="0"
+                  className="h-12 rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold outline-none focus:border-[#4DA7AF] focus:bg-white"
+                  placeholder="%"
+                />
+                <div className="grid grid-cols-3 gap-2">
+                  {discountOptions.map((discount) => (
+                    <button
+                      key={discount}
+                      type="button"
+                      onClick={() => updateField("discount", discount)}
+                      className={`h-9 rounded-xl border text-xs font-extrabold transition ${
+                        String(form.discount) === discount
+                          ? "border-[#4DA7AF] bg-[#4DA7AF] text-white"
+                          : "border-slate-200 bg-white text-slate-600 hover:border-[#4DA7AF] hover:text-[#23777f]"
+                      }`}
+                    >
+                      {discount}%
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="flex h-12 items-center justify-between rounded-2xl border border-[#4DA7AF]/20 bg-[#e9fbfc] px-4">
+                <span className="text-xs font-extrabold uppercase tracking-[0.12em] text-[#23777f]">Selling Price</span>
+                <span className="text-lg font-extrabold text-slate-950">
+                  Rs. {discountedPrice.toLocaleString("en-IN")}
+                </span>
+              </div>
+            </div>
+            <div className="grid gap-4 lg:grid-cols-3">
               <select
                 value={selectedCategory}
                 onChange={(event) => setSelectedCategory(event.target.value)}
@@ -161,26 +286,53 @@ export default function ProductAdd({ initialCategory = categories[0].name }) {
                   <option key={subcategory}>{subcategory}</option>
                 ))}
               </select>
+              <div className="grid gap-2">
+                <input
+                  value={form.stock}
+                  onChange={(event) => updateField("stock", event.target.value)}
+                  type="number"
+                  min="0"
+                  className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-5 text-center text-sm font-semibold outline-none focus:border-[#4DA7AF] focus:bg-white"
+                  placeholder="Quantity"
+                />
+                <div className="grid grid-cols-3 gap-2">
+                  {stockOptions.map((stock) => (
+                    <button
+                      key={stock}
+                      type="button"
+                      onClick={() => updateField("stock", stock)}
+                      className={`h-9 rounded-xl border text-xs font-extrabold transition ${
+                        String(form.stock) === stock
+                          ? "border-[#4DA7AF] bg-[#4DA7AF] text-white"
+                          : "border-slate-200 bg-white text-slate-600 hover:border-[#4DA7AF] hover:text-[#23777f]"
+                      }`}
+                    >
+                      {stock}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <input
-                value={form.price}
-                onChange={(event) => updateField("price", event.target.value)}
-                type="number"
-                min="1"
-                className="h-12 rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold outline-none focus:border-[#4DA7AF] focus:bg-white"
-                placeholder="Original Price"
-              />
-              <input
-                value={form.stock}
-                onChange={(event) => updateField("stock", event.target.value)}
-                type="number"
-                min="0"
-                className="h-12 rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold outline-none focus:border-[#4DA7AF] focus:bg-white"
-                placeholder="Stock"
-              />
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_220px_260px] lg:items-start">
+              <div className="flex min-h-12 items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2">
+                <span className="text-xs font-extrabold uppercase tracking-[0.12em] text-slate-500">Size</span>
+                <div className="flex flex-wrap justify-end gap-1.5">
+                  {sizeOptions.map((size) => (
+                    <button
+                      key={size}
+                      type="button"
+                      onClick={() => toggleSize(size)}
+                      className={`h-8 rounded-full border px-2.5 text-[11px] font-extrabold transition ${
+                        form.sizes.includes(size)
+                          ? "border-[#4DA7AF] bg-[#4DA7AF] text-white"
+                          : "border-slate-200 bg-white text-slate-700 hover:border-[#4DA7AF] hover:text-[#23777f]"
+                      }`}
+                    >
+                      {size}
+                    </button>
+                  ))}
+                </div>
+              </div>
               <select
                 value={form.tax}
                 onChange={(event) => updateField("tax", event.target.value)}
@@ -192,65 +344,24 @@ export default function ProductAdd({ initialCategory = categories[0].name }) {
                   </option>
                 ))}
               </select>
-              <select
-                value={form.size}
-                onChange={(event) => updateField("size", event.target.value)}
-                className="h-12 rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold outline-none focus:border-[#4DA7AF] focus:bg-white"
-              >
-                {sizeOptions.map((size) => (
-                  <option key={size} value={size}>
-                    Size {size}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <input
-                value={form.discount}
-                onChange={(event) => updateField("discount", event.target.value)}
-                type="number"
-                min="0"
-                className="h-12 rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold outline-none focus:border-[#4DA7AF] focus:bg-white"
-                placeholder="Discount %"
-              />
               <input
                 value={form.hsn}
                 onChange={(event) => updateField("hsn", event.target.value)}
-                className="h-12 rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold outline-none focus:border-[#4DA7AF] focus:bg-white"
+                className="h-12 w-full self-start rounded-2xl border border-slate-200 bg-slate-50 px-5 text-sm font-semibold outline-none focus:border-[#4DA7AF] focus:bg-white"
                 placeholder="HSN Code"
               />
             </div>
-            <div className="rounded-2xl border border-[#4DA7AF]/20 bg-[#e9fbfc] px-4 py-3">
-              <p className="text-xs font-extrabold uppercase tracking-[0.12em] text-[#23777f]">Selling Price</p>
-              <p className="mt-1 text-xl font-extrabold text-slate-950">
-                Rs. {discountedPrice.toLocaleString("en-IN")}
-              </p>
-            </div>
-            <input ref={imageInputRef} type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
-            <button
-              type="button"
-              onClick={() => imageInputRef.current?.click()}
-              className="flex min-h-28 items-center justify-center gap-3 rounded-3xl border border-dashed border-[#4DA7AF] bg-[#e9fbfc] p-4 text-sm font-extrabold text-[#23777f] transition hover:bg-white"
-            >
-              {form.image ? (
-                <>
-                  <img src={form.image} alt="Product preview" className="h-20 w-20 rounded-2xl object-cover" />
-                  Change Product Image
-                </>
-              ) : (
-                <>
-                  <ImagePlus size={20} />
-                  Product Image Upload
-                </>
-              )}
-            </button>
             {message && (
               <p className="rounded-2xl bg-orange-50 px-4 py-3 text-sm font-bold text-orange-700">
                 {message}
               </p>
             )}
-            <button type="submit" className="h-12 rounded-2xl bg-[#4DA7AF] text-sm font-extrabold text-white transition hover:bg-[#23777f]">
-              Add Product
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="h-12 w-full rounded-2xl bg-[#4DA7AF] px-5 text-sm font-extrabold text-white transition hover:bg-[#23777f] disabled:cursor-not-allowed disabled:opacity-70"
+            >
+              {isSubmitting ? "Adding..." : "Add Product"}
             </button>
           </div>
         </form>

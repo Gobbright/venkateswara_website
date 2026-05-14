@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { LockKeyhole, Mail, Phone, ShieldCheck, UserRound } from "lucide-react";
 import { authRequest } from "../../utils/api";
 import { saveUserSession } from "../../utils/userSession";
 
 const Auth = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [mode, setMode] = useState("login");
   const [form, setForm] = useState({
     name: "",
@@ -47,7 +48,7 @@ const Auth = () => {
       const result = await authRequest(isLogin ? "/auth/login" : "/auth/register", form);
       saveUserSession(result);
       setMessage(isLogin ? "Login success." : "Account create aachu. MongoDB la store aagiduchu.");
-      navigate("/", { replace: true });
+      navigate(location.state?.returnTo || "/", { replace: true });
     } catch (requestError) {
       setError(requestError.message || "Login/register failed.");
     } finally {

@@ -1,18 +1,53 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FolderTree, PackagePlus, PhoneCall, ShoppingCart, Users } from "lucide-react";
-import { categories, orders, users, videoCalls } from "../data/adminData";
-import { getStoredProducts } from "../utils/productStore";
+import { categories as defaultCategories, orders as defaultOrders, users as defaultUsers, videoCalls as defaultVideoCalls } from "../data/adminData";
+import { apiRequest } from "../../utils/api";
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const [counts, setCounts] = useState({
+    orders: defaultOrders.length,
+    categories: defaultCategories.length,
+    products: 0,
+    users: defaultUsers.length,
+    videoCalls: defaultVideoCalls.length,
+  });
+  const [newOrders, setNewOrders] = useState(defaultOrders.slice(0, 5));
+
+  useEffect(() => {
+    const loadDashboard = async () => {
+      try {
+        const [ordersResult, categoriesResult, productsResult, usersResult, videoCallsResult] = await Promise.all([
+          apiRequest("/orders"),
+          apiRequest("/categories"),
+          apiRequest("/products"),
+          apiRequest("/auth/users"),
+          apiRequest("/video-calls"),
+        ]);
+        setCounts({
+          orders: ordersResult.data.length,
+          categories: categoriesResult.data.length || defaultCategories.length,
+          products: productsResult.data.length,
+          users: usersResult.data.length,
+          videoCalls: videoCallsResult.data.length,
+        });
+        setNewOrders((ordersResult.data.length ? ordersResult.data : defaultOrders).slice(0, 5));
+      } catch {
+        setNewOrders(defaultOrders.slice(0, 5));
+      }
+    };
+
+    loadDashboard();
+  }, []);
+
   const overviewActions = [
-    { label: "Orders", value: orders.length, path: "/admin/orders", icon: ShoppingCart },
-    { label: "Categorys", value: categories.length, path: "/admin/category", icon: FolderTree },
-    { label: "Products", value: getStoredProducts().length, path: "/admin/products", icon: PackagePlus },
-    { label: "Users", value: users.length, path: "/admin/users", icon: Users },
-    { label: "Video Call Schedule", value: videoCalls.length, path: "/admin/video-calls", icon: PhoneCall },
+    { label: "Orders", value: counts.orders, path: "/admin/orders", icon: ShoppingCart },
+    { label: "Categorys", value: counts.categories, path: "/admin/category", icon: FolderTree },
+    { label: "Products", value: counts.products, path: "/admin/products", icon: PackagePlus },
+    { label: "Users", value: counts.users, path: "/admin/users", icon: Users },
+    { label: "Video Call Schedule", value: counts.videoCalls, path: "/admin/video-calls", icon: PhoneCall },
   ];
-  const newOrders = orders.slice(0, 5);
 
   return (
     <div className="min-h-[calc(100vh-7rem)]">
@@ -63,8 +98,8 @@ export default function Dashboard() {
             </thead>
             <tbody>
               {newOrders.map((order) => (
-                <tr key={order.id} className="border-b border-slate-100 text-sm last:border-b-0">
-                  <td className="px-5 py-4 font-extrabold text-slate-950">{order.id}</td>
+                <tr key={order._id || order.id} className="border-b border-slate-100 text-sm last:border-b-0">
+                  <td className="px-5 py-4 font-extrabold text-slate-950">{order._id || order.id}</td>
                   <td className="px-5 py-4 font-semibold text-slate-700">{order.customer}</td>
                   <td className="px-5 py-4 font-semibold text-slate-600">{order.product}</td>
                   <td className="px-5 py-4 font-extrabold text-[#23777f]">

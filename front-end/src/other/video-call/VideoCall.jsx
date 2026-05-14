@@ -8,6 +8,7 @@ import {
   MessageCircle,
   Video,
 } from "lucide-react";
+import { apiRequest } from "../../utils/api";
 
 const timeSlots = [
   "10:00 AM",
@@ -86,6 +87,9 @@ const VideoCall = () => {
   const [calendarMonth, setCalendarMonth] = useState(() => parseDateValue(today));
   const [selectedTime, setSelectedTime] = useState("10:00 AM");
   const [selectedOption, setSelectedOption] = useState("whatsapp");
+  const [customer, setCustomer] = useState({ name: "", phone: "", category: "" });
+  const [message, setMessage] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
   const selectedCall = callOptions.find((option) => option.id === selectedOption);
   const calendarYear = calendarMonth.getFullYear();
   const calendarMonthIndex = calendarMonth.getMonth();
@@ -110,6 +114,36 @@ const VideoCall = () => {
       next.setMonth(current.getMonth() + amount);
       return next;
     });
+  };
+
+  const scheduleCall = async () => {
+    if (!customer.name.trim() || !customer.phone.trim() || !selectedDate || !selectedTime) {
+      setMessage("Name, phone, date, time fill pannunga.");
+      return;
+    }
+
+    setIsSaving(true);
+    setMessage("");
+
+    try {
+      await apiRequest("/video-calls", {
+        method: "POST",
+        body: JSON.stringify({
+          name: customer.name.trim(),
+          phone: customer.phone.trim(),
+          category: customer.category.trim(),
+          date: selectedDate,
+          time: selectedTime,
+          callType: selectedCall?.title,
+        }),
+      });
+      setCustomer({ name: "", phone: "", category: "" });
+      setMessage("Video call MongoDB la scheduled. Team confirm pannuvanga.");
+    } catch (error) {
+      setMessage(error.message || "Video call schedule failed.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -311,6 +345,26 @@ const VideoCall = () => {
 
           <aside className="rounded-2xl bg-white p-6 shadow-[0_4px_20px_rgba(0,0,0,0.06)] lg:sticky lg:top-[150px] lg:self-start">
             <h2 className="text-2xl font-bold text-gray-900">Appointment Summary</h2>
+            <div className="mt-5 grid gap-3">
+              <input
+                value={customer.name}
+                onChange={(event) => setCustomer((current) => ({ ...current, name: event.target.value }))}
+                className="h-11 rounded-full bg-orange-50 px-4 text-sm font-bold outline-none focus:bg-white focus:ring-2 focus:ring-orange-300"
+                placeholder="Your name"
+              />
+              <input
+                value={customer.phone}
+                onChange={(event) => setCustomer((current) => ({ ...current, phone: event.target.value }))}
+                className="h-11 rounded-full bg-orange-50 px-4 text-sm font-bold outline-none focus:bg-white focus:ring-2 focus:ring-orange-300"
+                placeholder="Phone number"
+              />
+              <input
+                value={customer.category}
+                onChange={(event) => setCustomer((current) => ({ ...current, category: event.target.value }))}
+                className="h-11 rounded-full bg-orange-50 px-4 text-sm font-bold outline-none focus:bg-white focus:ring-2 focus:ring-orange-300"
+                placeholder="Category / product"
+              />
+            </div>
             <div className="mt-6 space-y-4 text-base font-medium text-gray-700">
               <div className="flex items-center justify-between gap-4">
                 <span>Date</span>
@@ -338,11 +392,19 @@ const VideoCall = () => {
               </p>
             </div>
 
+            {message && (
+              <p className="mt-5 rounded-2xl bg-orange-50 px-4 py-3 text-sm font-bold text-orange-700">
+                {message}
+              </p>
+            )}
+
             <button
               type="button"
+              onClick={scheduleCall}
+              disabled={isSaving}
               className="mt-5 flex h-12 w-full items-center justify-center gap-2 rounded-full bg-orange-600 px-5 text-base font-semibold text-white transition hover:scale-[1.03] hover:bg-gradient-to-r hover:from-orange-600 hover:via-[#FFBE8A] hover:to-[#4DA7AF]"
             >
-              Schedule Call
+              {isSaving ? "Scheduling..." : "Schedule Call"}
               <Video size={18} />
             </button>
           </aside>
