@@ -211,11 +211,11 @@ const Nav = () => {
 
       {/* Top Bar */}
       <div className="w-full bg-[#4DA7AF] text-white px-4 md:px-16 py-0.5">
-        <div className="flex items-center justify-between gap-6 whitespace-nowrap overflow-x-auto">
+        <div className="flex items-center justify-center gap-6 whitespace-nowrap overflow-x-auto md:justify-between">
           <p className="flex items-center text-sm md:text-base font-medium m-0">
             Welcome to Sri Venkateswara Family Shop
           </p>
-          <div className="flex items-center gap-6 md:gap-10 ml-4">
+          <div className="hidden items-center gap-6 md:ml-4 md:flex md:gap-10">
             <span className="flex items-center gap-1 text-sm md:text-base">
               <MapPin size={16} /> Tennur,Tiruchirappalli
             </span>
@@ -250,13 +250,24 @@ const Nav = () => {
             {/* Logo */}
             <img src={logoImg} alt="logo" className="h-14 w-auto origin-left scale-125 object-contain md:h-18" />
 
+            {/* Mobile Search Button */}
+            <button
+              type="button"
+              onClick={() => setSearchOpen((current) => !current)}
+              aria-label={searchOpen ? "Close search" : "Open search"}
+              aria-expanded={searchOpen}
+              className="ml-auto flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/70 text-black shadow-sm transition hover:bg-white md:hidden"
+            >
+              {searchOpen ? <X size={22} /> : <Search size={22} />}
+            </button>
+
             {/* Mobile Menu Button */}
             <button
               type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
               aria-expanded={mobileMenuOpen}
-              className="ml-auto flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/70 text-black shadow-sm transition hover:bg-white md:hidden"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/70 text-black shadow-sm transition hover:bg-white md:hidden"
             >
               {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
@@ -500,7 +511,7 @@ const Nav = () => {
               <button
                 type="button"
                 onClick={() => setSearchOpen(true)}
-                className="group relative h-10 w-full flex-1 overflow-hidden bg-white px-4 rounded-full text-sm font-semibold text-black transition !no-underline hover:scale-[1.02] md:w-[200px] shadow-sm"
+                className="group relative hidden h-10 w-full flex-1 overflow-hidden bg-white px-4 rounded-full text-sm font-semibold text-black transition !no-underline hover:scale-[1.02] md:block md:w-[200px] shadow-sm"
               >
                 <span className="absolute left-4 top-1/2 -translate-y-1/2 transition-all duration-500 group-hover:left-[calc(100%-42px)]">
                   <Search size={19} />

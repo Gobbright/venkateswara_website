@@ -76,7 +76,7 @@ export default function Order() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAF0E6] px-4 py-6 text-[#1a0a00] md:px-16 md:py-8">
+    <div className="min-h-screen bg-transparent px-4 py-6 text-[#1a0a00] md:px-16 md:py-8">
       <div className="mx-auto max-w-6xl">
         <div className="mb-8 overflow-hidden rounded-3xl bg-white px-6 py-7 text-center shadow-sm md:px-14">
           <p className="inline-flex rounded-full bg-orange-100 px-5 py-2 text-sm font-extrabold text-orange-600">

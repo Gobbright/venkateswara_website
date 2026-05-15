@@ -151,7 +151,7 @@ export default function Product() {
 
   if (!product) {
     return (
-      <div className="min-h-screen bg-[#f5ede3] p-6">
+      <div className="min-h-screen bg-transparent p-6">
         <p className="rounded-3xl bg-white p-8 text-center text-sm font-bold text-slate-600 shadow-sm">
           {message}
         </p>
@@ -160,7 +160,7 @@ export default function Product() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f5ede3] p-3 sm:p-4 md:p-6">
+    <div className="min-h-screen bg-transparent p-3 sm:p-4 md:p-6">
       <div className="mb-4 text-center">
         <h1 className="text-2xl font-semibold md:text-4xl">Product Details</h1>
         <p className="mt-1 text-sm text-gray-600 md:text-base">{productCode}</p>

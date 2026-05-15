@@ -45,7 +45,7 @@ const brandLogos = [
 
 const BrandBand = () => {
   return (
-    <section className="bg-[#FAF5EE] px-4 py-8 md:px-16">
+    <section className="bg-transparent px-4 py-8 md:px-16">
       <div className="mx-auto max-w-6xl overflow-hidden rounded-lg border border-orange-100 bg-white py-5 shadow-sm">
         <div className="brand-logo-track flex w-max items-center gap-8">
           {[...brandLogos, ...brandLogos].map((brand, index) => (

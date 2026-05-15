@@ -21,6 +21,14 @@
 }
 
 @layer utilities {
+  .site-bg {
+    background-color: #faf0e6;
+    background-image: linear-gradient(rgba(250, 240, 230, 0.78), rgba(250, 240, 230, 0.78)), url("./assets/Images/bg.png");
+    background-attachment: fixed;
+    background-position: center;
+    background-size: cover;
+  }
+
   .scrollbar-hide {
     -ms-overflow-style: none;  /* Internet Explorer 10+ */
     scrollbar-width: none;  /* Firefox */

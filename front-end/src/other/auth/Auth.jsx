@@ -191,7 +191,7 @@ const Auth = () => {
   };
 
   return (
-    <section className="min-h-screen bg-[#FAF0E6] px-5 py-8 text-[#1a0a00] md:px-16 md:py-10">
+    <section className="min-h-screen bg-transparent px-5 py-8 text-[#1a0a00] md:px-16 md:py-10">
       <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[1.1fr_0.9fr]">
         <div className="rounded-2xl bg-white p-6 shadow-[0_4px_20px_rgba(0,0,0,0.06)] md:p-8">
           <div className="grid grid-cols-2 rounded-full bg-orange-50 p-1">

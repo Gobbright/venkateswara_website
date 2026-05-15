@@ -19,9 +19,9 @@ function App() {
   }, [location.pathname]);
 
   return (
-    <>    
+    <div className={isAdminPage ? undefined : 'site-bg min-h-screen'}>    
       {!isAdminPage && <Nav />}
-      <main className="page-content w-full ">
+      <main className="page-content w-full">
         <Routes>
           {routes.map((route) => (
             <Route key={route.path} path={route.path} element={route.element} />
@@ -31,7 +31,7 @@ function App() {
       {!isAdminPage && <Footer />}
       {!isAdminPage && <LeftAdBanner />}
       {!isAdminPage && <FloatingContactButtons />}
-    </>
+    </div>
   );
 }
 

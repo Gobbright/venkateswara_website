@@ -27,7 +27,7 @@ export default function OrderCompleted() {
   }, [id]);
 
   return (
-    <div className="min-h-screen bg-[#FAF0E6] px-4 py-8 text-[#1a0a00] md:px-16">
+    <div className="min-h-screen bg-transparent px-4 py-8 text-[#1a0a00] md:px-16">
       <div className="mx-auto max-w-5xl">
         <section className="overflow-hidden rounded-3xl bg-white shadow-sm">
           <div className="bg-[#4DA7AF] px-6 py-8 text-center text-white md:px-12">

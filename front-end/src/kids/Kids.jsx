@@ -138,7 +138,7 @@ export default function Kids() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f5ede3] p-3 sm:p-4 md:p-6">
+    <div className="min-h-screen bg-transparent p-3 sm:p-4 md:p-6">
       <div className="mb-3 shrink-0 text-center">
         <h1 className="text-2xl font-semibold md:text-4xl">Kids Collection</h1>
         <p className="mt-1 text-sm text-gray-600 md:text-base">

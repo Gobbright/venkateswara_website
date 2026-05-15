@@ -91,7 +91,7 @@ export default function Payment() {
 
   if (!checkout) {
     return (
-      <div className="min-h-screen bg-[#FAF0E6] px-4 py-8 text-[#1a0a00] md:px-16">
+      <div className="min-h-screen bg-transparent px-4 py-8 text-[#1a0a00] md:px-16">
         <div className="mx-auto max-w-xl rounded-3xl bg-white p-8 text-center shadow-sm">
           <WalletCards className="mx-auto mb-4 text-orange-600" size={44} />
           <h1 className="text-2xl font-extrabold text-slate-950">Payment details missing</h1>
@@ -105,7 +105,7 @@ export default function Payment() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FAF0E6] px-4 py-8 text-[#1a0a00] md:px-16">
+    <div className="min-h-screen bg-transparent px-4 py-8 text-[#1a0a00] md:px-16">
       <div className="mx-auto grid max-w-5xl gap-6 lg:grid-cols-[1fr_360px]">
         <section className="rounded-3xl bg-white p-6 shadow-sm md:p-8">
           <div className="flex items-center gap-3">

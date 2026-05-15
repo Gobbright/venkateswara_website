@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { AlertTriangle, Check, ImagePlus, Pencil, Trash2, X } from "lucide-react";
+import { Link } from "react-router-dom";
+import { AlertTriangle, Check, ImagePlus, Pencil, Plus, Trash2, X } from "lucide-react";
 import { apiRequest, assetUrl } from "../../utils/api";
 
 const statusStyles = {
@@ -197,11 +198,20 @@ export default function ProductList() {
 
   return (
     <div className="flex min-h-full flex-col">
-      <div className="mb-5 shrink-0">
-        <h2 className="text-2xl font-extrabold text-slate-950">Product List</h2>
-        <p className="mt-1 text-sm font-semibold text-slate-500">
-          Product table with working demo edit and delete actions.
-        </p>
+      <div className="mb-5 flex shrink-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h2 className="text-2xl font-extrabold text-slate-950">Product List</h2>
+          <p className="mt-1 text-sm font-semibold text-slate-500">
+            Product table with working demo edit and delete actions.
+          </p>
+        </div>
+        <Link
+          to="/admin/products/add"
+          className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-[#4DA7AF] px-5 text-sm font-extrabold text-white shadow-sm transition hover:bg-[#23777f] sm:self-start"
+        >
+          <Plus size={17} />
+          Add Product
+        </Link>
       </div>
 
       {message && (
