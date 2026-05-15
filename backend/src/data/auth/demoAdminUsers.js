@@ -13,7 +13,7 @@ export const demoAdminUsers = [
     password: "orders123",
     name: "Orders Manager",
     role: "orders_manager",
-    access: ["orders", "category", "product_list", "product_add"],
+    access: ["orders", "payments", "billing", "category", "product_list", "product_add"],
     jwtAuth: true,
     status: 1,
   },

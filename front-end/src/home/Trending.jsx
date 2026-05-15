@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { apiRequest, assetUrl } from "../utils/api";
 
 import img1 from "../assets/Images/Trend/1.png";
 import img2 from "../assets/Images/Trend/2.png";
@@ -7,52 +8,71 @@ import img3 from "../assets/Images/Trend/3.png";
 import img4 from "../assets/Images/Trend/4.png";
 import bgImg from "../assets/Images/bg.png";
 
-const products = [
+const fallbackProducts = [
   {
     id: 1,
     badge: "BESTSELLER",
-    name: "Mens Shirt",
+    name: "Men's Shirt",
+    category: "Mens",
     price: 1499,
     originalPrice: 2000,
     rating: 4.5,
     reviews: 128,
-    path: "/product/mens-shirt",
+    path: "/mens",
     image: img2,
   },
   {
     id: 2,
-    badge: "NEW",
-    name: "Kids Wear",
-    price: 1199,
-    originalPrice: 2099,
-    rating: 4.5,
-    reviews: 128,
-    path: "/product/kids-wear",
-    image: img4,
-  },
-  {
-    id: 3,
-    badge: "FESTIVE",
-    name: "Sharara for women",
+    badge: "TRENDING",
+    name: "Women's Saree",
+    category: "Womens",
     price: 1899,
     originalPrice: 2799,
     rating: 4.5,
     reviews: 128,
-    path: "/product/sharara-women",
-    image: img3,
+    path: "/womens",
+    image: img1,
+  },
+  {
+    id: 3,
+    badge: "NEW",
+    name: "Kids Wear",
+    category: "Kids",
+    price: 1199,
+    originalPrice: 2099,
+    rating: 4.5,
+    reviews: 128,
+    path: "/kids",
+    image: img4,
   },
   {
     id: 4,
     badge: "PREMIUM",
-    name: "Emerald Kanjivaram Saree",
-    price: 5499,
-    originalPrice: 7999,
+    name: "Fashion Accessories",
+    category: "Accessories",
+    price: 899,
+    originalPrice: 1299,
     rating: 4.5,
     reviews: 128,
-    path: "/product/emerald-saree",
-    image: img1,
+    path: "/accessories",
+    image: img3,
   },
 ];
+
+const categories = ["Mens", "Womens", "Kids", "Accessories"];
+
+const toTrendingProduct = (product, index) => ({
+  id: product._id || fallbackProducts[index].id,
+  badge: product.category || fallbackProducts[index].badge,
+  name: product.name || fallbackProducts[index].name,
+  category: product.category || fallbackProducts[index].category,
+  price: Number(product.price || fallbackProducts[index].price),
+  originalPrice: Number(product.originalPrice || product.price || fallbackProducts[index].originalPrice),
+  rating: 4.5,
+  reviews: Number(product.stock || 128),
+  path: product._id ? `/product/${product._id}` : fallbackProducts[index].path,
+  image: product.image ? assetUrl(product.image) : fallbackProducts[index].image,
+});
 
 const StarRating = ({ rating }) => (
   <div className="flex items-center gap-0.5">
@@ -151,6 +171,27 @@ const ProductCard = ({ product }) => {
 };
 
 export default function Trending() {
+  const [products, setProducts] = useState(fallbackProducts);
+
+  useEffect(() => {
+    const loadTrendingProducts = async () => {
+      try {
+        const results = await Promise.all(
+          categories.map((category) => apiRequest(`/products?category=${encodeURIComponent(category)}&limit=1`))
+        );
+        const nextProducts = results.map((result, index) =>
+          result.data?.[0] ? toTrendingProduct(result.data[0], index) : fallbackProducts[index]
+        );
+        setProducts(nextProducts);
+      } catch (error) {
+        console.error("Trending products load failed", error);
+        setProducts(fallbackProducts);
+      }
+    };
+
+    loadTrendingProducts();
+  }, []);
+
   return (
     <section
       className="w-full py-14 px-4 md:px-10"
@@ -167,7 +208,7 @@ export default function Trending() {
         </h2>
         <p className="text-gray-500 text-sm leading-relaxed">
           Explore the newest additions to our collection <br />
-          crafted for the who loves to stay ahead in fashion
+          crafted for shoppers who love fresh fashion.
         </p>
       </div>
 

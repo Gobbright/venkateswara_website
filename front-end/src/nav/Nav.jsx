@@ -176,9 +176,9 @@ const Nav = () => {
       });
       saveUserSession(result);
       setCurrentUser(result.user);
-      setProfileMessage("Profile update aachu.");
+      setProfileMessage("Profile updated successfully.");
     } catch (error) {
-      setProfileError(error.message || "Profile update panna mudiyala.");
+      setProfileError(error.message || "Profile update failed.");
     } finally {
       setIsProfileSaving(false);
     }

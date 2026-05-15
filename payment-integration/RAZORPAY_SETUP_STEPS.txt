@@ -1,0 +1,111 @@
+Razorpay Integration Setup - Safe Step by Step
+==============================================
+
+Current status
+--------------
+- Website payment page has a Razorpay button.
+- It is currently a safe mock flow. No real money is charged.
+- Orders become Confirmed only after payment is marked Completed.
+- Admin can view Payment Gateway settings and payment transaction history.
+
+Important safety rule
+---------------------
+- Never put RAZORPAY_KEY_SECRET in frontend files.
+- Secret key must stay only in backend/.env.
+- Frontend can use only public Key ID later.
+- Real payment verification must happen only in backend.
+
+Folder / files added
+--------------------
+- backend/src/models/payments/PaymentSetting.js
+- backend/src/models/payments/PaymentTransaction.js
+- backend/src/controllers/payments/paymentController.js
+- backend/src/routes/payments/paymentRoutes.js
+- front-end/src/Admin/Payments/Payments.jsx
+- payment-integration/RAZORPAY_SETUP_STEPS.txt
+
+Environment variables
+---------------------
+Add these in backend/.env:
+
+RAZORPAY_KEY_ID=rzp_test_your_key_id
+RAZORPAY_KEY_SECRET=your_razorpay_key_secret
+
+For production later:
+
+RAZORPAY_KEY_ID=rzp_live_your_key_id
+RAZORPAY_KEY_SECRET=your_live_razorpay_key_secret
+
+Admin setup
+-----------
+1. Run backend and frontend.
+2. Login to Admin.
+3. Open Payment Gateway nav.
+4. Add Razorpay Key ID.
+5. Keep mode as Test first.
+6. Keep Enable Razorpay OFF until real gateway code is connected.
+7. Save settings.
+8. Payment transaction table will show website mock payments.
+
+Website payment flow now
+------------------------
+1. Customer adds product to cart or buys from product page.
+2. Customer opens payment page.
+3. Customer selects Razorpay.
+4. Click Pay with Razorpay.
+5. Mock payment transaction is saved.
+6. Order is created with:
+   paymentMethod=Razorpay
+   paymentStatus=Verified
+   status=Confirmed
+7. Admin Orders page shows payment method and status.
+
+Pending order flow
+------------------
+If customer clicks Save as Pending Order:
+- Order is created with:
+  paymentStatus=Pending
+  status=Pending
+- It is not confirmed until payment is completed or admin verifies it.
+
+Real Razorpay integration later
+-------------------------------
+1. Install Razorpay package in backend:
+   cd backend
+   npm install razorpay
+
+2. Add backend create-order endpoint:
+   POST /api/payments/razorpay/create-order
+
+3. Backend should create Razorpay order using:
+   RAZORPAY_KEY_ID
+   RAZORPAY_KEY_SECRET
+
+4. Frontend should load Razorpay Checkout script and open Razorpay popup.
+
+5. After payment success, frontend sends these to backend:
+   razorpay_order_id
+   razorpay_payment_id
+   razorpay_signature
+   checkout details
+
+6. Backend verifies signature using RAZORPAY_KEY_SECRET.
+
+7. Only after backend signature verification succeeds:
+   - save payment transaction
+   - create order
+   - set paymentStatus=Verified
+   - set status=Confirmed
+
+8. If verification fails:
+   - save transaction as Failed
+   - do not confirm order
+
+Testing checklist
+-----------------
+- npm run check in backend should pass.
+- npm run build in front-end should pass.
+- Admin Payment Gateway page should load.
+- Website Pay with Razorpay should create a mock transaction.
+- Admin Orders page should show payment method and payment status.
+- Confirmed orders should only happen after completed payment.

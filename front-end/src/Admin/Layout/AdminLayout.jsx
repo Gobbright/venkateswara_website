@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { Bell, Check, Edit3, Menu, UserRound, X } from "lucide-react";
-import { Outlet } from "react-router-dom";
+import { Bell, Check, Edit3, ExternalLink, Menu, UserRound, X } from "lucide-react";
+import { Link, Outlet } from "react-router-dom";
 import { updateAdminProfile } from "../auth/jwtAuth";
 import AdminNav from "../Nav/AdminNav";
 import { apiRequest } from "../../utils/api";
@@ -107,7 +107,7 @@ export default function AdminLayout({ onLogout, onUserUpdate = () => {}, user })
 
   const saveProfile = () => {
     if (!profileForm.name.trim() || !profileForm.email.trim() || !profileForm.label.trim()) {
-      setProfileMessage("Name, email, label fill pannunga.");
+      setProfileMessage("Enter the name, email, and label.");
       return;
     }
 
@@ -123,14 +123,14 @@ export default function AdminLayout({ onLogout, onUserUpdate = () => {}, user })
   };
 
   return (
-    <section className="min-h-screen bg-[#f4f7fb] text-slate-950">
-      <div className="grid min-h-screen lg:grid-cols-[300px_1fr]">
-        <div className="hidden lg:block">
+    <section className="h-screen overflow-hidden bg-[#f4f7fb] text-slate-950">
+      <div className="grid h-full lg:grid-cols-[300px_1fr]">
+        <div className="hidden h-screen lg:block">
           <AdminNav onLogout={onLogout} user={user} />
         </div>
 
-        <main className="min-w-0">
-          <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/90 px-4 py-4 backdrop-blur md:px-8">
+        <main className="flex h-screen min-w-0 flex-col">
+          <header className="z-20 shrink-0 border-b border-slate-200 bg-white/90 px-4 py-4 backdrop-blur md:px-8">
             <div className="flex items-center justify-between gap-4">
               <div>
                 <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-[#23777f]">
@@ -146,6 +146,14 @@ export default function AdminLayout({ onLogout, onUserUpdate = () => {}, user })
                 )}
               </div>
               <div className="flex items-center gap-2">
+                <Link
+                  to="/"
+                  className="flex h-11 w-11 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white text-xs font-extrabold text-slate-700 transition !no-underline hover:border-[#4DA7AF] hover:bg-[#e9fbfc] hover:text-[#23777f] sm:w-auto sm:px-3"
+                  aria-label="Back to Website"
+                >
+                  <ExternalLink size={16} />
+                  <span className="hidden sm:inline">Back to Website</span>
+                </Link>
                 <button
                   type="button"
                   onClick={() => setNotificationsOpen((current) => !current)}
@@ -195,7 +203,7 @@ export default function AdminLayout({ onLogout, onUserUpdate = () => {}, user })
             )}
           </header>
 
-          <div className="px-4 py-6 md:px-8">
+          <div className="min-h-0 flex-1 overflow-y-auto px-4 py-6 md:px-8">
             <Outlet />
           </div>
         </main>

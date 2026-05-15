@@ -132,7 +132,7 @@ export default function ProductList() {
 
   const saveEdit = async () => {
     if (!editForm?.name?.trim() || editForm.price === "" || editForm.stock === "") {
-      setMessage("Name, price, stock fill pannunga.");
+      setMessage("Enter the product name, price, and stock.");
       return;
     }
 
@@ -155,7 +155,7 @@ export default function ProductList() {
       setProducts((currentProducts) =>
         currentProducts.map((product) => (product._id === editingId ? result.data : product))
       );
-      setMessage("Product MongoDB la updated.");
+      setMessage("Product updated successfully.");
       setEditingId(null);
       setEditForm(null);
     } catch (error) {
@@ -183,7 +183,7 @@ export default function ProductList() {
       const result = await apiRequest(`/products/${deleteTarget._id}`, { method: "DELETE" });
       setProducts((currentProducts) => currentProducts.filter((product) => product._id !== deleteTarget._id));
       setDeletedProducts((currentProducts) => [result.data, ...currentProducts]);
-      setMessage("Product status 0 aachu. DB la delete agala.");
+      setMessage("Product has been moved to deleted status.");
       setActiveView("deleted");
       setDeleteTarget(null);
     } catch (error) {
@@ -196,8 +196,8 @@ export default function ProductList() {
   const editSellingPrice = editForm ? calculateDiscountedPrice(editForm.price, editForm.discount) : 0;
 
   return (
-    <div>
-      <div className="mb-5">
+    <div className="flex min-h-full flex-col">
+      <div className="mb-5 shrink-0">
         <h2 className="text-2xl font-extrabold text-slate-950">Product List</h2>
         <p className="mt-1 text-sm font-semibold text-slate-500">
           Product table with working demo edit and delete actions.
@@ -210,8 +210,8 @@ export default function ProductList() {
         </p>
       )}
 
-      <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
-        <div className="border-b border-slate-100 px-5 py-4">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+        <div className="shrink-0 border-b border-slate-100 px-5 py-4">
           <div className="flex flex-wrap gap-2">
             {["All", ...categories.map((category) => category.name)].map((filter) => (
               <button
@@ -244,7 +244,7 @@ export default function ProductList() {
           </div>
         </div>
 
-        <div className="overflow-x-auto">
+        <div className="min-h-0 flex-1 overflow-auto">
           <table className="w-full min-w-[920px] text-left">
             <thead>
               <tr className="border-b border-slate-100 text-xs uppercase tracking-[0.12em] text-slate-400">
@@ -347,7 +347,7 @@ export default function ProductList() {
             <div className="mb-5 flex items-start justify-between gap-4">
               <div>
                 <h3 className="text-xl font-extrabold text-slate-950">Edit Product</h3>
-                <p className="mt-1 text-sm font-semibold text-slate-500">Product details update pannunga.</p>
+                <p className="mt-1 text-sm font-semibold text-slate-500">Update product details.</p>
               </div>
               <button
                 type="button"
@@ -522,7 +522,7 @@ export default function ProductList() {
               <div>
                 <h3 className="text-xl font-extrabold text-slate-950">Delete Product</h3>
                 <p className="mt-1 text-sm font-semibold text-slate-500">
-                  {deleteTarget.name} delete panna confirm pannunga.
+                  Confirm delete for {deleteTarget.name}.
                 </p>
               </div>
             </div>

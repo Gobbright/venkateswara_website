@@ -5,10 +5,12 @@ import Category from "./Category/Category";
 import Dashboard from "./Dashboard/Dashboard";
 import AdminLayout from "./Layout/AdminLayout";
 import AdminLogin from "./Login/AdminLogin";
+import Billing from "./Billing/Billing";
 import Orders from "./Orders/Orders";
 import ProductAdd from "./Products/ProductAdd";
 import ProductList from "./Products/ProductList";
 import Enquiries from "./Enquiries/Enquiries";
+import Payments from "./Payments/Payments";
 import Users from "./Users/Users";
 import VideoCalls from "./VideoCalls/VideoCalls";
 
@@ -57,6 +59,9 @@ export default function Admin() {
         <Route path="dashboard" element={<ProtectedAdminRoute user={session.user} permission="dashboard"><Dashboard /></ProtectedAdminRoute>} />
         <Route path="orders" element={<ProtectedAdminRoute user={session.user} permission="orders"><Orders /></ProtectedAdminRoute>} />
         <Route path="orders/:status" element={<ProtectedAdminRoute user={session.user} permission="orders"><Orders /></ProtectedAdminRoute>} />
+        <Route path="billing/online" element={<ProtectedAdminRoute user={session.user} permission="billing"><Billing mode="online" /></ProtectedAdminRoute>} />
+        <Route path="billing/offline" element={<ProtectedAdminRoute user={session.user} permission="billing"><Billing mode="offline" /></ProtectedAdminRoute>} />
+        <Route path="payments" element={<ProtectedAdminRoute user={session.user} permission="payments"><Payments /></ProtectedAdminRoute>} />
         <Route path="category" element={<ProtectedAdminRoute user={session.user} permission="category"><Category /></ProtectedAdminRoute>} />
         <Route path="category/:categoryName" element={<ProtectedAdminRoute user={session.user} permission="category"><Category /></ProtectedAdminRoute>} />
         <Route path="products" element={<ProtectedAdminRoute user={session.user} permission="products"><ProductList /></ProtectedAdminRoute>} />

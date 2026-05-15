@@ -105,7 +105,7 @@ export default function OrderCompleted() {
 
           {!order && (
             <p className="px-6 pb-6 text-center text-sm font-bold text-orange-700">
-              {message || `Order details not found for ${id}. Track Order la recent orders check pannunga.`}
+              {message || `Order details were not found for ${id}. Please check your recent orders in Track Order.`}
             </p>
           )}
         </section>

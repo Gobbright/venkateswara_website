@@ -1,0 +1,92 @@
+Sri Venkateswara Family Shop - Run Instructions
+===============================================
+
+1. MongoDB / DB run
+-------------------
+Option A: MongoDB Compass / local service already installed iruntha:
+- MongoDB service running-a irukanum.
+- DB URL backend/.env la:
+  MONGO_URI=mongodb://127.0.0.1:27017/venkateswara_shop
+
+Check panna:
+  mongosh
+  show dbs
+  use venkateswara_shop
+
+2. Backend run
+--------------
+Terminal 1:
+  cd backend
+  npm install
+  npm run dev
+
+Backend URL:
+  http://localhost:5000
+
+Health check:
+  http://localhost:5000/api/health
+
+Backend server file:
+  backend/server.js
+
+Port 5000 already use-la iruntha error varum:
+  Port 5000 is already in use.
+
+Fix:
+  Get-NetTCPConnection -LocalPort 5000
+  Stop-Process -Id <OwningProcessId> -Force
+
+3. Mail check
+-------------
+backend/.env la SMTP details correct-a irukanum:
+  SMTP_HOST=smtp.gmail.com
+  SMTP_PORT=587
+  SMTP_SECURE=false
+  SMTP_USER=your-gmail@gmail.com
+  SMTP_PASS=your-gmail-app-password
+  MAIL_FROM=Sri Venkateswara Family Shop <your-gmail@gmail.com>
+
+Mail config verify panna:
+  cd backend
+  npm run check:mail
+
+Success message:
+  Mail config OK for <your email>
+
+BadCredentials / 535-5.7.8 error vantha:
+- backend/.env la SMTP_USER andha Gmail account-a irukanum.
+- SMTP_PASS normal Gmail password illa. Gmail App Password venum.
+- Gmail account la 2-Step Verification ON pannitu fresh 16-character App Password create pannunga.
+- App Password spaces irunthalum backend code remove pannidum, but copied password correct-a irukanum.
+
+4. Frontend run
+---------------
+Terminal 2:
+  cd front-end
+  npm install
+  npm run dev
+
+Frontend URL:
+  http://localhost:5173
+
+Frontend API default:
+  http://localhost:5000/api
+
+Custom API venumna front-end/.env create panni:
+  VITE_API_URL=http://localhost:5000/api
+
+5. Console errors view panna
+----------------------------
+Backend:
+- Terminal 1 la backend console errors direct-a varum.
+- API errors backend console-la method, URL, status, stack/message oda varum.
+
+Frontend:
+- Browser open panni F12 press pannunga.
+- Console tab la frontend errors paakalam.
+- Network tab la failed API requests paakalam.
+
+Correct run order:
+  1) MongoDB
+  2) Backend: cd backend && npm run dev
+  3) Frontend: cd front-end && npm run dev

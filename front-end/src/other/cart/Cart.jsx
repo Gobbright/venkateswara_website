@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { CreditCard } from 'lucide-react';
 import { loadShopItems, removeShopItem, saveShopItems } from '../../utils/shopItems';
-import { apiRequest, assetUrl } from '../../utils/api';
+import { assetUrl } from '../../utils/api';
 import { getStoredUser } from '../../utils/userSession';
 
 export default function Cart() {
@@ -11,7 +11,7 @@ export default function Cart() {
   const [cartItems, setCartItems] = useState([]);
   const [customer, setCustomer] = useState(() => {
     const user = getStoredUser();
-    return { name: user?.name || "", phone: user?.phone || "", address: "" };
+    return { name: user?.name || "", email: user?.email || "", phone: user?.phone || "", address: "" };
   });
   const [message, setMessage] = useState("");
   const [isSaving, setIsSaving] = useState(false);
@@ -72,12 +72,12 @@ export default function Cart() {
     }
 
     if (!cartItems.length) {
-      setMessage("Cart empty da.");
+      setMessage("Your cart is empty.");
       return;
     }
 
-    if (!customer.name.trim() || !customer.phone.trim() || !customer.address.trim()) {
-      setMessage("Checkout ku name, phone, address fill pannunga.");
+    if (!customer.name.trim() || !customer.email.trim() || !customer.phone.trim() || !customer.address.trim()) {
+      setMessage("Enter your name, email, phone, and address to checkout.");
       return;
     }
 
@@ -86,31 +86,30 @@ export default function Cart() {
     setMessage("");
 
     try {
-      const result = await apiRequest("/orders", {
-        method: "POST",
-        body: JSON.stringify({
-          userId: user.id,
-          email: user.email,
-          customer: customer.name.trim(),
-          phone: customer.phone.trim(),
-          address: customer.address.trim(),
-          category: cartItems[0]?.category || "Cart",
-          product: cartItems.map((item) => `${item.name} x ${item.quantity || 1}`).join(", "),
-          items: cartItems,
-          amount: total,
-          date: now.toISOString().slice(0, 10),
-          time: now.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }),
-          status: "Confirmed",
-          paymentStatus: "Verified",
-          paymentMethod: "Online",
-        }),
+      navigate("/payment", {
+        state: {
+          source: "cart",
+          checkout: {
+            userId: user.id,
+            email: customer.email.trim(),
+            customer: customer.name.trim(),
+            phone: customer.phone.trim(),
+            address: customer.address.trim(),
+            category: cartItems[0]?.category || "Cart",
+            product: cartItems.map((item) => `${item.name} x ${item.quantity || 1}`).join(", "),
+            items: cartItems,
+            amount: total,
+            date: now.toISOString().slice(0, 10),
+            time: now.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }),
+            status: "Confirmed",
+            paymentStatus: "Verified",
+            paymentMethod: "Online",
+          },
+          returnTo: location.pathname,
+        },
       });
-      await saveShopItems("cart", [], user);
-      setCartItems([]);
-      setCustomer({ name: "", phone: "", address: "" });
-      navigate(`/order/completed/${result.data._id}`, { state: { order: result.data } });
     } catch (error) {
-      setMessage(error.message || "Order checkout failed.");
+      setMessage(error.message || "Payment page open failed.");
     } finally {
       setIsSaving(false);
     }
@@ -208,8 +207,8 @@ export default function Cart() {
             ))}
             {cartItems.length === 0 && (
               <div className="rounded-3xl bg-[#fffaf3] p-8 text-center shadow-sm">
-                <p className="text-lg font-semibold text-gray-950">Cart empty da.</p>
-                <p className="mt-1 text-sm text-gray-600">Product add panna inga varum.</p>
+                <p className="text-lg font-semibold text-gray-950">Your cart is empty.</p>
+                <p className="mt-1 text-sm text-gray-600">Products added to cart will appear here.</p>
               </div>
             )}
           </div>
@@ -252,6 +251,13 @@ export default function Cart() {
               onChange={(event) => setCustomer((current) => ({ ...current, name: event.target.value }))}
               className="h-11 rounded-full bg-white px-4 text-sm font-semibold outline-none ring-1 ring-black/10 focus:ring-orange-300"
               placeholder="Customer name"
+            />
+            <input
+              type="email"
+              value={customer.email}
+              onChange={(event) => setCustomer((current) => ({ ...current, email: event.target.value }))}
+              className="h-11 rounded-full bg-white px-4 text-sm font-semibold outline-none ring-1 ring-black/10 focus:ring-orange-300"
+              placeholder="Email address"
             />
             <input
               value={customer.phone}

@@ -78,7 +78,7 @@ export default function ProductAdd({ initialCategory = "Mens" }) {
         }
       } catch {
         setCategories([]);
-        setMessage("Categories DB la load aagala.");
+        setMessage("Categories could not be loaded.");
       }
     };
 
@@ -124,7 +124,7 @@ export default function ProductAdd({ initialCategory = "Mens" }) {
       if (imageInputRef.current) {
         imageInputRef.current.value = "";
       }
-      setMessage("Image size 5MB-kulla irukkanum.");
+      setMessage("Image size must be under 5MB.");
       return;
     }
 
@@ -137,7 +137,7 @@ export default function ProductAdd({ initialCategory = "Mens" }) {
     event.preventDefault();
 
     if (!form.name.trim() || form.price === "" || form.stock === "") {
-      setMessage("Product name, price, stock fill pannunga.");
+      setMessage("Enter the product name, price, and stock.");
       return;
     }
 
@@ -171,9 +171,9 @@ export default function ProductAdd({ initialCategory = "Mens" }) {
       if (imageInputRef.current) {
         imageInputRef.current.value = "";
       }
-      setMessage(`${result.data.name} MongoDB la added successfully.`);
+      setMessage(`${result.data.name} added successfully.`);
     } catch (error) {
-      setMessage(error.message || "Product add panna mudiyala. Try again.");
+      setMessage(error.message || "Product could not be added. Try again.");
     } finally {
       setIsSubmitting(false);
     }

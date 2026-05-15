@@ -5,6 +5,7 @@ import Tailoring from '../other/tailoring/Tailoring';
 import Contact from '../other/contact/Contact';
 import Order from '../order/Order';
 import OrderCompleted from '../order/OrderCompleted';
+import Payment from '../order/Payment';
 import Cart from '../other/cart/Cart';
 import Wishlist from '../other/wishlist/Wishlist';
 import Product from '../product-details/Product';
@@ -12,6 +13,7 @@ import VideoCall from '../other/video-call/VideoCall';
 import Auth from '../other/auth/Auth';
 import CategoriesPage from '../categories/CategoriesPage';
 import Admin from '../Admin/Admin';
+import { Navigate } from 'react-router-dom';
 
 export const routes = [
   { path: '/', element: <Home />, name: 'Home' },
@@ -28,6 +30,7 @@ export const routes = [
   { path: '/video-call', element: <VideoCall />, name: 'Video Call' },
   { path: '/login', element: <Auth />, name: 'Login' },
   { path: '/order', element: <Order />, name: 'Order' },
+  { path: '/payment', element: <Payment />, name: 'Payment' },
   { path: '/order/track', element: <Order />, name: 'Track Order' },
   { path: '/my-orders', element: <Order />, name: 'My Orders' },
   { path: '/order/completed/:id', element: <OrderCompleted />, name: 'Order Completed' },
@@ -35,4 +38,5 @@ export const routes = [
   { path: '/other/contact', element: <Contact />, name: 'Contact' },
   { path: '/other/tailoring', element: <Tailoring />, name: 'Tailoring' },
   { path: '/admin/*', element: <Admin />, name: 'Admin' },
+  { path: '*', element: <Navigate to="/" replace />, name: 'Not Found' },
 ];

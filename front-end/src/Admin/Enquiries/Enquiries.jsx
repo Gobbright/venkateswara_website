@@ -29,7 +29,7 @@ export default function Enquiries() {
   }, []);
 
   const deleteEnquiry = async (enquiry) => {
-    if (!window.confirm(`${enquiry.name} enquiry delete panna confirm ah?`)) {
+    if (!window.confirm(`Delete enquiry from ${enquiry.name}?`)) {
       return;
     }
 

@@ -95,7 +95,7 @@ export default function Orders() {
         currentOrders.map((order) => (order._id === selectedOrder._id ? result.data : order))
       );
       setSelectedOrder(null);
-      setMessage("Order MongoDB la updated.");
+      setMessage("Order updated successfully.");
     } catch (error) {
       setMessage(error.message || "Order update failed.");
     }
@@ -212,6 +212,7 @@ export default function Orders() {
                 <th className="px-5 py-4 font-extrabold">Category</th>
                 <th className="px-5 py-4 font-extrabold">Product</th>
                 <th className="px-5 py-4 font-extrabold">Date / Time</th>
+                <th className="px-5 py-4 font-extrabold">Payment</th>
                 <th className="px-5 py-4 font-extrabold">Amount</th>
                 <th className="px-5 py-4 font-extrabold">Status</th>
                 <th className="px-5 py-4 font-extrabold">Edit</th>
@@ -227,6 +228,10 @@ export default function Orders() {
                   <td className="px-5 py-4 font-semibold text-slate-600">
                     <span className="block text-slate-900">{order.date}</span>
                     <span className="text-xs text-slate-500">{order.time}</span>
+                  </td>
+                  <td className="px-5 py-4 font-semibold text-slate-600">
+                    <span className="block text-slate-900">{order.paymentMethod || "Razorpay"}</span>
+                    <span className="text-xs text-slate-500">{order.paymentStatus || "Pending"}</span>
                   </td>
                   <td className="px-5 py-4 font-extrabold text-[#23777f]">
                     Rs. {order.amount.toLocaleString("en-IN")}
@@ -250,7 +255,7 @@ export default function Orders() {
               ))}
               {dateFilteredOrders.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="px-5 py-8 text-center text-sm font-bold text-slate-500">
+                  <td colSpan={9} className="px-5 py-8 text-center text-sm font-bold text-slate-500">
                     No orders found for selected filters.
                   </td>
                 </tr>
@@ -303,6 +308,18 @@ export default function Orders() {
               <label className="block">
                 <span className="mb-1 block text-xs font-extrabold uppercase tracking-[0.12em] text-slate-400">Amount</span>
                 <input type="number" value={selectedOrder.amount} onChange={(event) => handleModalChange("amount", event.target.value)} className="h-11 w-full rounded-2xl border border-slate-200 px-4 text-sm font-bold outline-none focus:border-[#4DA7AF]" />
+              </label>
+              <label className="block">
+                <span className="mb-1 block text-xs font-extrabold uppercase tracking-[0.12em] text-slate-400">Payment Method</span>
+                <input value={selectedOrder.paymentMethod || ""} onChange={(event) => handleModalChange("paymentMethod", event.target.value)} className="h-11 w-full rounded-2xl border border-slate-200 px-4 text-sm font-bold outline-none focus:border-[#4DA7AF]" />
+              </label>
+              <label className="block">
+                <span className="mb-1 block text-xs font-extrabold uppercase tracking-[0.12em] text-slate-400">Payment Status</span>
+                <select value={selectedOrder.paymentStatus || "Pending"} onChange={(event) => handleModalChange("paymentStatus", event.target.value)} className="h-11 w-full rounded-2xl border border-slate-200 px-4 text-sm font-bold outline-none focus:border-[#4DA7AF]">
+                  {["Pending", "Verified", "Failed", "Refunded"].map((status) => (
+                    <option key={status}>{status}</option>
+                  ))}
+                </select>
               </label>
               <label className="block">
                 <span className="mb-1 block text-xs font-extrabold uppercase tracking-[0.12em] text-slate-400">Date</span>

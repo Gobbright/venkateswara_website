@@ -6,7 +6,10 @@ import {
   getUsers,
   loginAdmin,
   loginUser,
-  registerUser,
+  requestPasswordResetOtp,
+  requestRegisterOtp,
+  verifyPasswordResetOtp,
+  verifyRegisterOtp,
   updateProfile,
   updateUser,
 } from "../../controllers/auth/authController.js";
@@ -15,8 +18,12 @@ import { protect } from "../../middleware/auth/authMiddleware.js";
 const router = express.Router();
 
 router.get("/demo-admins", getDemoAdmins);
-router.post("/register", registerUser);
+router.post("/register", requestRegisterOtp);
+router.post("/register/request-otp", requestRegisterOtp);
+router.post("/register/verify-otp", verifyRegisterOtp);
 router.post("/login", loginUser);
+router.post("/forgot-password/send-otp", requestPasswordResetOtp);
+router.post("/forgot-password/verify-otp", verifyPasswordResetOtp);
 router.post("/admin/login", loginAdmin);
 router.get("/users", getUsers);
 router.route("/users/:id").put(updateUser).delete(deleteUser);

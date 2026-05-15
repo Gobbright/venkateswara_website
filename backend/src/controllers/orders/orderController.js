@@ -1,6 +1,7 @@
 import asyncHandler from "../../middleware/asyncHandler.js";
 import Order from "../../models/orders/Order.js";
 import mongoose from "mongoose";
+import { sendOrderBillMail, sendOrderConfirmationMail, sendOrderStatusMail } from "../../utils/mail/mailer.js";
 
 const createOrderCode = async () => {
   const orders = await Order.find({ orderCode: /^SVFS-/ }).select("orderCode");
@@ -46,18 +47,40 @@ export const createOrder = asyncHandler(async (req, res) => {
     ...req.body,
     orderCode: req.body.orderCode || (await createOrderCode()),
   });
+
+  if (order.email && order.status === "Confirmed" && order.paymentStatus === "Verified") {
+    sendOrderConfirmationMail({ to: order.email, order }).catch((error) => {
+      console.error("Order confirmation mail failed:", error.message);
+    });
+  }
+
   res.status(201).json({ success: true, data: order });
 });
 
 export const updateOrder = asyncHandler(async (req, res) => {
+  const existingOrder = await Order.findById(req.params.id);
+
+  if (!existingOrder) {
+    res.status(404);
+    throw new Error("Order not found");
+  }
+
+  const previousStatus = existingOrder.status;
   const order = await Order.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
     runValidators: true,
   });
 
-  if (!order) {
-    res.status(404);
-    throw new Error("Order not found");
+  if (order.email && req.body.status && req.body.status !== previousStatus) {
+    sendOrderStatusMail({ to: order.email, order, previousStatus }).catch((error) => {
+      console.error(`Order status mail failed for ${order.orderCode || order._id}:`, error.message);
+    });
+
+    if (order.status === "Delivered") {
+      sendOrderBillMail({ to: order.email, order }).catch((error) => {
+        console.error(`Order bill mail failed for ${order.orderCode || order._id}:`, error.message);
+      });
+    }
   }
 
   res.json({ success: true, data: order });

@@ -30,7 +30,7 @@ export default function Product() {
   const [selectedSize, setSelectedSize] = useState("M");
   const [customer, setCustomer] = useState(() => {
     const user = getStoredUser();
-    return { name: user?.name || "", phone: user?.phone || "", address: "" };
+    return { name: user?.name || "", email: user?.email || "", phone: user?.phone || "", address: "" };
   });
   const [message, setMessage] = useState("Loading product...");
   const [isOrdering, setIsOrdering] = useState(false);
@@ -110,8 +110,8 @@ export default function Product() {
       return;
     }
 
-    if (!customer.name.trim() || !customer.phone.trim() || !customer.address.trim()) {
-      setMessage("Order panna name, phone, address fill pannunga.");
+    if (!customer.name.trim() || !customer.email.trim() || !customer.phone.trim() || !customer.address.trim()) {
+      setMessage("Enter your name, email, phone, and address to place the order.");
       return;
     }
 
@@ -120,29 +120,30 @@ export default function Product() {
     setMessage("");
 
     try {
-      const result = await apiRequest("/orders", {
-        method: "POST",
-        body: JSON.stringify({
-          userId: user.id,
-          email: user.email,
-          customer: customer.name.trim(),
-          phone: customer.phone.trim(),
-          address: customer.address.trim(),
-          category: product.category,
-          product: `${product.name} (${productCode}) x ${quantity}`,
-          items: [toShopItem(product, quantity, selectedSize)],
-          amount,
-          date: now.toISOString().slice(0, 10),
-          time: now.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }),
-          status: "Confirmed",
-          paymentStatus: "Verified",
-          paymentMethod: "Online",
-        }),
+      navigate("/payment", {
+        state: {
+          source: "product",
+          checkout: {
+            userId: user.id,
+            email: customer.email.trim(),
+            customer: customer.name.trim(),
+            phone: customer.phone.trim(),
+            address: customer.address.trim(),
+            category: product.category,
+            product: `${product.name} (${productCode}) x ${quantity}`,
+            items: [toShopItem(product, quantity, selectedSize)],
+            amount,
+            date: now.toISOString().slice(0, 10),
+            time: now.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }),
+            status: "Confirmed",
+            paymentStatus: "Verified",
+            paymentMethod: "Online",
+          },
+          returnTo: location.pathname,
+        },
       });
-      setCustomer({ name: "", phone: "", address: "" });
-      navigate(`/order/completed/${result.data._id}`, { state: { order: result.data } });
     } catch (error) {
-      setMessage(error.message || "Order save failed.");
+      setMessage(error.message || "Payment page open failed.");
     } finally {
       setIsOrdering(false);
     }
@@ -235,7 +236,7 @@ export default function Product() {
           </div>
 
           <p className="mt-6 text-base leading-7 text-gray-700">
-            {product.description || "Admin DB la added product. Order panna admin orders la save aagum."}
+            {product.description || "This product was added from the admin inventory. Orders will be saved in the admin order list."}
           </p>
 
           <div className="mt-6">
@@ -269,6 +270,13 @@ export default function Product() {
               onChange={(event) => setCustomer((current) => ({ ...current, name: event.target.value }))}
               className="h-11 rounded-full bg-white px-4 text-sm font-semibold outline-none ring-1 ring-black/10 focus:ring-orange-300"
               placeholder="Customer name"
+            />
+            <input
+              type="email"
+              value={customer.email}
+              onChange={(event) => setCustomer((current) => ({ ...current, email: event.target.value }))}
+              className="h-11 rounded-full bg-white px-4 text-sm font-semibold outline-none ring-1 ring-black/10 focus:ring-orange-300"
+              placeholder="Email address"
             />
             <input
               value={customer.phone}

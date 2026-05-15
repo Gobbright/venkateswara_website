@@ -56,7 +56,7 @@ const Contact = () => {
 
   const submitEnquiry = async () => {
     if (!form.name.trim() || !form.phone.trim()) {
-      setStatus("Name and phone fill pannunga.");
+      setStatus("Enter your name and phone number.");
       return;
     }
 
@@ -72,7 +72,7 @@ const Contact = () => {
         }),
       });
       setForm({ name: "", phone: "", category: "", product: "", email: "", message: "" });
-      setStatus("Enquiry MongoDB la saved.");
+      setStatus("Your enquiry has been saved.");
     } catch (error) {
       setStatus(error.message || "Enquiry send failed.");
     } finally {

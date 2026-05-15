@@ -8,7 +8,7 @@ export const ADMIN_USERS = [
     name: "Main Admin",
     role: "main-admin",
     label: "All access",
-    permissions: ["dashboard", "orders", "category", "products", "product-add", "users", "video-calls", "enquiries"],
+    permissions: ["dashboard", "orders", "payments", "billing", "category", "products", "product-add", "users", "video-calls", "enquiries"],
     startPath: "/admin/dashboard",
   },
   {
@@ -16,8 +16,8 @@ export const ADMIN_USERS = [
     password: "orders123",
     name: "Orders Manager",
     role: "orders-manager",
-    label: "Orders, category, product list, product add",
-    permissions: ["orders", "category", "products", "product-add"],
+    label: "Orders, payments, billing, category, product list, product add",
+    permissions: ["orders", "payments", "billing", "category", "products", "product-add"],
     startPath: "/admin/orders",
   },
   {
@@ -47,12 +47,25 @@ const readJwt = (token) => {
   }
 };
 
+const encodeJwtPart = (value) => {
+  const json = JSON.stringify(value);
+  const encoded = btoa(unescape(encodeURIComponent(json)));
+
+  return encoded.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+};
+
+const createClientJwt = (payload) => {
+  const header = { alg: "none", typ: "JWT" };
+
+  return `${encodeJwtPart(header)}.${encodeJwtPart(payload)}.`;
+};
+
 export const fetchDemoAdmins = async () => {
   const response = await fetch(`${API_BASE_URL}/auth/demo-admins`);
   const result = await response.json();
 
   if (!response.ok) {
-    throw new Error(result.message || "Demo admin users load panna mudiyala");
+    throw new Error(result.message || "Demo admin users could not be loaded.");
   }
 
   return result.data;
@@ -109,7 +122,7 @@ export const updateAdminProfile = (profile) => {
     email: profile.email.trim().toLowerCase(),
     label: profile.label.trim(),
   };
-  const token = createMockJwt({
+  const token = createClientJwt({
     ...nextUser,
     updatedAt: Date.now(),
   });

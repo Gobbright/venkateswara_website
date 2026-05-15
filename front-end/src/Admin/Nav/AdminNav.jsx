@@ -8,8 +8,10 @@ import {
   MessageSquareText,
   PackagePlus,
   PhoneCall,
+  ReceiptText,
   ShoppingCart,
   Sparkles,
+  WalletCards,
   Users,
 } from "lucide-react";
 import { hasAdminAccess } from "../auth/jwtAuth";
@@ -23,11 +25,14 @@ export default function AdminNav({ onLogout, onNavigate = () => {}, user }) {
   const location = useLocation();
   const navigate = useNavigate();
   const [ordersOpen, setOrdersOpen] = useState(false);
+  const [billingOpen, setBillingOpen] = useState(false);
   const [categoriesOpen, setCategoriesOpen] = useState(false);
   const [productsOpen, setProductsOpen] = useState(false);
   const [categories, setCategories] = useState([]);
 
   const isOrders = location.pathname.startsWith("/admin/orders");
+  const isBilling = location.pathname.startsWith("/admin/billing");
+  const isPayments = location.pathname.startsWith("/admin/payments");
   const isCategory = location.pathname.startsWith("/admin/category");
   const isProducts = location.pathname.startsWith("/admin/products");
   const isUsers = location.pathname.startsWith("/admin/users");
@@ -36,6 +41,8 @@ export default function AdminNav({ onLogout, onNavigate = () => {}, user }) {
   const isDashboard = location.pathname === "/admin/dashboard";
   const canViewDashboard = hasAdminAccess(user, "dashboard");
   const canViewOrders = hasAdminAccess(user, "orders");
+  const canViewBilling = hasAdminAccess(user, "billing");
+  const canViewPayments = hasAdminAccess(user, "payments");
   const canViewCategory = hasAdminAccess(user, "category");
   const canViewProducts = hasAdminAccess(user, "products") || hasAdminAccess(user, "product-add");
   const canViewProductList = hasAdminAccess(user, "products");
@@ -46,9 +53,10 @@ export default function AdminNav({ onLogout, onNavigate = () => {}, user }) {
 
   useEffect(() => {
     setOrdersOpen(isOrders);
+    setBillingOpen(isBilling);
     setCategoriesOpen(isCategory);
     setProductsOpen(isProducts);
-  }, [isOrders, isCategory, isProducts]);
+  }, [isOrders, isBilling, isCategory, isProducts]);
 
   useEffect(() => {
     const loadCategories = async () => {
@@ -78,7 +86,7 @@ export default function AdminNav({ onLogout, onNavigate = () => {}, user }) {
     }`;
 
   return (
-    <aside className="border-r border-slate-200 bg-white p-5 lg:min-h-screen">
+    <aside className="h-full overflow-y-auto border-r border-slate-200 bg-white p-5">
       <div className="flex items-center gap-3">
         <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#4DA7AF] text-white">
           <Sparkles size={23} />
@@ -108,6 +116,7 @@ export default function AdminNav({ onLogout, onNavigate = () => {}, user }) {
                 navigate("/admin/orders");
               }
               setOrdersOpen((current) => !current);
+              setBillingOpen(false);
               setCategoriesOpen(false);
               setProductsOpen(false);
             }}
@@ -134,6 +143,45 @@ export default function AdminNav({ onLogout, onNavigate = () => {}, user }) {
           </div>
         )}
 
+        {canViewPayments && (
+          <NavLink to="/admin/payments" onClick={onNavigate} className={navButtonClass(isPayments)}>
+            <WalletCards size={18} />
+            Payment Gateway
+          </NavLink>
+        )}
+
+        {canViewBilling && (
+          <div className="rounded-3xl border border-slate-200 p-2">
+          <button
+            type="button"
+            onClick={() => {
+              if (!isBilling) {
+                navigate("/admin/billing/online");
+              }
+              setBillingOpen((current) => !current);
+              setOrdersOpen(false);
+              setCategoriesOpen(false);
+              setProductsOpen(false);
+            }}
+            className={navButtonClass(isBilling)}
+          >
+            <ReceiptText size={18} />
+            Billing
+            <ChevronDown className={`ml-auto transition ${billingOpen ? "rotate-180" : ""}`} size={17} />
+          </button>
+          {billingOpen && (
+            <div className="mt-2 grid gap-1 px-2 pb-2">
+              <NavLink to="/admin/billing/online" onClick={onNavigate} className={childLinkClass}>
+                Online Billing
+              </NavLink>
+              <NavLink to="/admin/billing/offline" onClick={onNavigate} className={childLinkClass}>
+                Offline Billing
+              </NavLink>
+            </div>
+          )}
+          </div>
+        )}
+
         {canViewCategory && (
           <div className="rounded-3xl border border-slate-200 p-2">
           <button
@@ -144,6 +192,7 @@ export default function AdminNav({ onLogout, onNavigate = () => {}, user }) {
               }
               setCategoriesOpen((current) => !current);
               setOrdersOpen(false);
+              setBillingOpen(false);
               setProductsOpen(false);
             }}
             className={navButtonClass(isCategory)}
@@ -182,6 +231,7 @@ export default function AdminNav({ onLogout, onNavigate = () => {}, user }) {
               }
               setProductsOpen((current) => !current);
               setOrdersOpen(false);
+              setBillingOpen(false);
               setCategoriesOpen(false);
             }}
             className={navButtonClass(isProducts)}

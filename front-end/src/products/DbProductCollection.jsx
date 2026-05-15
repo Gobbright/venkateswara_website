@@ -39,7 +39,7 @@ export default function DbProductCollection({ title = "Products", category = "" 
           : "/products";
         const result = await apiRequest(query);
         setProducts(result.data);
-        setMessage(result.data.length ? "" : "Admin added active products inga varum.");
+        setMessage(result.data.length ? "" : "Active products added by the admin will appear here.");
       } catch (error) {
         setMessage(error.message || "Products load failed.");
       }
@@ -112,7 +112,7 @@ export default function DbProductCollection({ title = "Products", category = "" 
       <div className="mb-4 text-center">
         <h1 className="text-2xl font-semibold md:text-4xl">{title}</h1>
         <p className="mt-1 text-sm text-gray-600 md:text-base">
-          Admin DB la active status products mattum
+          Showing active products from the admin inventory.
         </p>
       </div>
 

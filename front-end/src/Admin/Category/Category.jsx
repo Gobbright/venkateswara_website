@@ -66,7 +66,7 @@ export default function Category() {
 
   const saveCategory = async () => {
     if (!categoryNameInput.trim()) {
-      setMessage("Category name fill pannunga.");
+      setMessage("Enter the category name.");
       return;
     }
 
@@ -101,7 +101,7 @@ export default function Category() {
       if (selectedCategoryName === category.name) {
         navigate("/admin/category");
       }
-      setMessage("Category status 0 aachu. DB la delete agala.");
+      setMessage("Category has been moved to inactive status.");
     } catch (error) {
       setMessage(error.message || "Category delete failed.");
     }
@@ -109,12 +109,12 @@ export default function Category() {
 
   const saveSubcategory = async () => {
     if (!selectedCategory) {
-      setMessage("First category select pannunga.");
+      setMessage("Select a category first.");
       return;
     }
 
     if (!subcategoryNameInput.trim()) {
-      setMessage("Subcategory name fill pannunga.");
+      setMessage("Enter the subcategory name.");
       return;
     }
 
@@ -145,7 +145,7 @@ export default function Category() {
       setCategories((current) =>
         current.map((category) => (category._id === result.data._id ? result.data : category))
       );
-      setMessage("Subcategory status 0 aachu. DB la delete agala.");
+      setMessage("Subcategory has been moved to inactive status.");
     } catch (error) {
       setMessage(error.message || "Subcategory delete failed.");
     }
@@ -159,7 +159,7 @@ export default function Category() {
             {selectedCategory ? `${selectedCategory.name} Category` : "Overall Category"}
           </h2>
           <p className="mt-1 text-sm font-semibold text-slate-500">
-            Category and subcategory DB records. Delete panna status 0 mattum.
+            Category and subcategory records. Delete action only changes status to inactive.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">

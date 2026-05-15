@@ -38,7 +38,7 @@ export default function Order() {
 
     if (!user) {
       setOrders([]);
-      setMessage("Order track pakka login pannunga.");
+      setMessage("Please login to track your orders.");
       return;
     }
 
@@ -46,7 +46,7 @@ export default function Order() {
       try {
         const result = await apiRequest(`/orders?userId=${encodeURIComponent(user.id)}`);
         setOrders(result.data);
-        setMessage(result.data.length ? "" : "Innum order illa da. Shopping start pannunga.");
+        setMessage(result.data.length ? "" : "No orders yet. Start shopping to place your first order.");
       } catch (error) {
         setOrders([]);
         setMessage(error.message || "Orders load failed.");
@@ -86,7 +86,7 @@ export default function Order() {
             Track Your Order
           </h1>
           <p className="mx-auto mt-4 max-w-3xl text-base leading-7 text-gray-600">
-            Login pannirukka user orders mattum inga show aagum.
+            Only orders from the logged-in account will be shown here.
           </p>
         </div>
 
@@ -94,7 +94,7 @@ export default function Order() {
           <div className="rounded-3xl bg-white p-8 text-center shadow-sm">
             <Package className="mx-auto mb-4 text-orange-600" size={44} />
             <h2 className="text-2xl font-extrabold text-slate-950">Login Required</h2>
-            <p className="mt-2 text-sm font-semibold text-slate-600">Order track and checkout ku user login venum.</p>
+            <p className="mt-2 text-sm font-semibold text-slate-600">Login is required to track orders and checkout.</p>
             <button
               type="button"
               onClick={requireLogin}
@@ -189,7 +189,7 @@ export default function Order() {
                 ) : (
                   <div className="rounded-2xl bg-orange-50 p-8 text-center">
                     <p className="text-lg font-extrabold text-slate-950">No order found.</p>
-                    <p className="mt-1 text-sm font-semibold text-slate-600">Checkout complete panna tracking inga varum.</p>
+                    <p className="mt-1 text-sm font-semibold text-slate-600">Completed checkouts will appear here for tracking.</p>
                   </div>
                 )}
               </section>
@@ -199,7 +199,7 @@ export default function Order() {
                   <PackageCheck className="mb-4" size={34} />
                   <h2 className="mb-2 text-2xl font-extrabold">My Orders</h2>
                   <p className="text-sm leading-6 text-white/85">
-                    {currentUser.name} account la saved orders: {orders.length}
+                    Saved orders for {currentUser.name}: {orders.length}
                   </p>
                 </div>
 
@@ -226,7 +226,7 @@ export default function Order() {
                     ))}
                     {visibleOrders.length === 0 && (
                       <p className="rounded-2xl bg-orange-50 p-5 text-center text-sm font-bold text-orange-700">
-                        Matching order illa.
+                        No matching order found.
                       </p>
                     )}
                   </div>

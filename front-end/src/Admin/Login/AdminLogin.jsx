@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { ArrowRight, LockKeyhole, Mail, ShieldCheck, Store } from "lucide-react";
 import { ADMIN_USERS, fetchDemoAdmins } from "../auth/jwtAuth";
+import PasswordField from "../../components/PasswordField";
 
 export default function AdminLogin({ onLogin }) {
   const [email, setEmail] = useState("");
@@ -21,7 +23,7 @@ export default function AdminLogin({ onLogin }) {
     const result = await onLogin({ email, password });
 
     if (!result.ok) {
-      setError(result.message || "Correct email and password enter pannunga.");
+      setError(result.message || "Enter a valid email and password.");
       setIsLoading(false);
     }
   };
@@ -37,7 +39,7 @@ export default function AdminLogin({ onLogin }) {
             Sri Venkateswara Admin
           </h1>
           <p className="mt-4 max-w-md text-base leading-7 text-white/75">
-            Orders, categories, products, and stock status ellam one dashboard la manage pannalam.
+            Manage orders, categories, products, billing, and stock status from one dashboard.
           </p>
           <div className="mt-8 grid gap-3">
             {["Overall order status", "Category wise products", "Top product add page"].map((item) => (
@@ -55,7 +57,7 @@ export default function AdminLogin({ onLogin }) {
             </div>
             <h2 className="text-3xl font-extrabold text-slate-950">Admin Login</h2>
             <p className="mt-2 text-sm leading-6 text-slate-600">
-              JWT auth token create aagi dashboard open aagum.
+              Sign in to access the secure admin dashboard.
             </p>
           </div>
 
@@ -82,8 +84,7 @@ export default function AdminLogin({ onLogin }) {
                 <LockKeyhole size={17} className="text-[#23777f]" />
                 Password
               </span>
-              <input
-                type="password"
+              <PasswordField
                 value={password}
                 onChange={(event) => {
                   setPassword(event.target.value);
@@ -109,6 +110,13 @@ export default function AdminLogin({ onLogin }) {
             {isLoading ? "Checking..." : "Login Dashboard"}
             <ArrowRight size={18} />
           </button>
+
+          <Link
+            to="/"
+            className="mt-3 flex h-11 w-full items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 text-sm font-extrabold text-slate-700 transition !no-underline hover:border-[#4DA7AF] hover:bg-[#e9fbfc] hover:text-[#23777f]"
+          >
+            Back to Website
+          </Link>
 
           <div className="mt-5 rounded-2xl bg-slate-50 px-4 py-3">
             <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-slate-400">

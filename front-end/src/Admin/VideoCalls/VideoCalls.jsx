@@ -47,7 +47,7 @@ export default function VideoCalls() {
 
   const saveVideoCall = async () => {
     if (!editingCall || !editForm.name.trim() || !editForm.phone.trim() || !editForm.date || !editForm.time) {
-      setMessage("Name, phone, date, time fill pannunga.");
+      setMessage("Enter the name, phone number, date, and time.");
       return;
     }
 
@@ -72,7 +72,7 @@ export default function VideoCalls() {
   };
 
   const deleteVideoCall = async (call) => {
-    if (!window.confirm(`${call.name} video call delete panna confirm ah?`)) {
+    if (!window.confirm(`Delete the video call for ${call.name}?`)) {
       return;
     }
 
@@ -165,7 +165,7 @@ export default function VideoCalls() {
             <div className="mb-5 flex items-start justify-between gap-4">
               <div>
                 <h3 className="text-xl font-extrabold text-slate-950">Edit Video Call</h3>
-                <p className="mt-1 text-sm font-semibold text-slate-500">Schedule details update pannunga.</p>
+                <p className="mt-1 text-sm font-semibold text-slate-500">Update the schedule details.</p>
               </div>
               <button
                 type="button"

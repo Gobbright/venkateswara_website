@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ShoppingCart, Star } from "lucide-react";
+import { apiRequest, assetUrl } from "../utils/api";
 import { loadShopItems, toggleShopItem } from "../utils/shopItems";
 import { getStoredUser } from "../utils/userSession";
 
@@ -11,56 +12,76 @@ import pattu1 from "../assets/Images/Collection/3.png";
 import saree2 from "../assets/Images/Collection/4.png";
 import bgImg from "../assets/Images/bg.png";
 
-const products = [
+const fallbackProducts = [
   {
     id: 1,
     badge: "BESTSELLER",
     badgeColor: "bg-orange-500",
     image: saree1,
+    category: "Womens",
     rating: 5,
     reviews: "10k",
-    name: "AKHUGA Printed Saree",
+    name: "Printed Saree",
     price: 999,
     originalPrice: 1099,
-    path: "/product/akhuga-printed-saree",
+    path: "/womens",
   },
   {
     id: 2,
     badge: "NEW",
     badgeColor: "bg-orange-500",
     image: shirt1,
+    category: "Mens",
     rating: 5,
     reviews: "7k",
-    name: "SNIPES Shirt",
+    name: "Classic Shirt",
     price: 1199,
     originalPrice: 2099,
-    path: "/product/snipes-shirt",
+    path: "/mens",
   },
   {
     id: 3,
     badge: "FESTIVE",
     badgeColor: "bg-orange-500",
     image: pattu1,
+    category: "Kids",
     rating: 5,
     reviews: "5.5k",
-    name: "Pattu Cousmized",
+    name: "Kids Festive Set",
     price: 1699,
     originalPrice: 2000,
-    path: "/product/pattu-cousmized",
+    path: "/kids",
   },
   {
     id: 4,
     badge: "PREMIUM",
     badgeColor: "bg-orange-500",
     image: saree2,
+    category: "Accessories",
     rating: 5,
     reviews: "128",
-    name: "Emerald Kanjivaram Saree",
+    name: "Fashion Accessories",
     price: 2499,
     originalPrice: 3999,
-    path: "/product/emerald-kanjivaram-saree",
+    path: "/accessories",
   },
 ];
+
+const toCollectionProduct = (product, index) => ({
+  id: product._id || fallbackProducts[index]?.id || index + 1,
+  badge: product.category || fallbackProducts[index]?.badge || "NEW",
+  badgeColor: "bg-orange-500",
+  image: product.image ? assetUrl(product.image) : fallbackProducts[index]?.image,
+  rating: 5,
+  reviews: product.stock || fallbackProducts[index]?.reviews || "New",
+  name: product.name || fallbackProducts[index]?.name || "Latest Product",
+  price: Number(product.price || fallbackProducts[index]?.price || 0),
+  originalPrice: Number(product.originalPrice || product.price || fallbackProducts[index]?.originalPrice || 0),
+  path: product._id ? `/product/${product._id}` : fallbackProducts[index]?.path || "/categories",
+  category: product.category || fallbackProducts[index]?.category || "Latest Collection",
+  subcategory: product.subcategory || "",
+  productCode: product.productCode || "",
+});
 
 const ProductCard = ({ product }) => {
   const location = useLocation();
@@ -70,7 +91,7 @@ const ProductCard = ({ product }) => {
   const shopItem = {
     ...product,
     slug: product.path,
-    category: "Latest Collection",
+    category: product.category || "Latest Collection",
     oldPrice: product.originalPrice,
   };
 
@@ -177,6 +198,26 @@ const ProductCard = ({ product }) => {
 };
 
 const Collection = () => {
+  const [products, setProducts] = useState(fallbackProducts);
+
+  useEffect(() => {
+    const loadLatestProducts = async () => {
+      try {
+        const result = await apiRequest("/products?limit=4");
+        setProducts(
+          result.data?.length
+            ? result.data.map((product, index) => toCollectionProduct(product, index))
+            : fallbackProducts
+        );
+      } catch (error) {
+        console.error("Latest products load failed", error);
+        setProducts(fallbackProducts);
+      }
+    };
+
+    loadLatestProducts();
+  }, []);
+
   return (
     <div
       className="px-4 sm:px-8 md:px-16 lg:px-24 xl:px-32 py-12 sm:py-16"
@@ -193,8 +234,7 @@ const Collection = () => {
           Latest Collection
         </h2>
         <p className="text-sm text-gray-500 leading-relaxed max-w-sm mx-auto">
-          Explore the newest additions to our collection crafted for the modern
-          who loves to stay ahead in fashion
+          Explore the latest products added to our store.
         </p>
       </div>
 

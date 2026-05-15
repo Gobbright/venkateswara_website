@@ -41,7 +41,7 @@ const ShopEnquiry = () => {
 
   const submitEnquiry = async () => {
     if (!form.name.trim() || !form.phone.trim()) {
-      setMessage("Name and phone fill pannunga.");
+      setMessage("Enter your name and phone number.");
       return;
     }
 
@@ -56,7 +56,7 @@ const ShopEnquiry = () => {
         }),
       });
       setForm({ name: "", phone: "", category: "", product: "", message: "" });
-      setMessage("Enquiry MongoDB la saved. Team contact pannuvanga.");
+      setMessage("Your enquiry has been saved. Our team will contact you soon.");
     } catch (error) {
       setMessage(error.message || "Enquiry send failed.");
     } finally {

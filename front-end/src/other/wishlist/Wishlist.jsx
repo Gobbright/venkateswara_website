@@ -196,8 +196,8 @@ export default function Wishlist() {
           ))}
           {wishlistItems.length === 0 && (
             <div className="col-span-full rounded-3xl bg-[#fffaf3] p-8 text-center shadow-sm">
-              <p className="text-lg font-semibold text-gray-950">Wishlist empty da.</p>
-              <p className="mt-1 text-sm text-gray-600">Heart click panna product inga varum.</p>
+              <p className="text-lg font-semibold text-gray-950">Your wishlist is empty.</p>
+              <p className="mt-1 text-sm text-gray-600">Products you favorite will appear here.</p>
             </div>
           )}
         </div>

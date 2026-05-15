@@ -118,7 +118,7 @@ const VideoCall = () => {
 
   const scheduleCall = async () => {
     if (!customer.name.trim() || !customer.phone.trim() || !selectedDate || !selectedTime) {
-      setMessage("Name, phone, date, time fill pannunga.");
+      setMessage("Enter your name, phone number, date, and time.");
       return;
     }
 
@@ -138,7 +138,7 @@ const VideoCall = () => {
         }),
       });
       setCustomer({ name: "", phone: "", category: "" });
-      setMessage("Video call MongoDB la scheduled. Team confirm pannuvanga.");
+      setMessage("Your video call has been scheduled. Our team will confirm it soon.");
     } catch (error) {
       setMessage(error.message || "Video call schedule failed.");
     } finally {

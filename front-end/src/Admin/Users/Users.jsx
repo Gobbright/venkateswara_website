@@ -40,7 +40,7 @@ export default function Users() {
 
   const saveUser = async () => {
     if (!editingUser || !editForm.name.trim() || !editForm.email.trim()) {
-      setMessage("Name and email fill pannunga.");
+      setMessage("Enter the name and email address.");
       return;
     }
 
@@ -65,7 +65,7 @@ export default function Users() {
   };
 
   const deleteUser = async (user) => {
-    if (!window.confirm(`${user.name} user delete panna confirm ah?`)) {
+    if (!window.confirm(`Delete user ${user.name}?`)) {
       return;
     }
 
@@ -160,7 +160,7 @@ export default function Users() {
             <div className="mb-5 flex items-start justify-between gap-4">
               <div>
                 <h3 className="text-xl font-extrabold text-slate-950">Edit User</h3>
-                <p className="mt-1 text-sm font-semibold text-slate-500">Customer details update pannunga.</p>
+                <p className="mt-1 text-sm font-semibold text-slate-500">Update the customer details.</p>
               </div>
               <button
                 type="button"
