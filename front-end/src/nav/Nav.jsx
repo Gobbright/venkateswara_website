@@ -367,7 +367,7 @@ const Nav = () => {
 
       {/* Mobile Menu Overlay */}
       {mobileMenuOpen && (
-        <div className="fixed inset-0 z-[90] bg-black/55 backdrop-blur-sm md:hidden">
+        <div className="fixed inset-0 z-[90] bg-[#FFEED8] md:hidden">
           <div className="flex h-dvh w-full flex-col overflow-y-auto bg-[#FFEED8] px-5 pb-8 pt-4 shadow-2xl">
             <div className="mb-6 flex items-center justify-between">
               <img src={logoImg} alt="logo" className="h-16 w-auto" />
@@ -534,7 +534,7 @@ const Nav = () => {
       </div>
 
       {supportOpen && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/35 px-4 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-[#fff3e6]/80 px-4 backdrop-blur-sm">
           <div
             className="relative w-full max-w-lg rounded-2xl border border-white/40 p-6 text-slate-900 shadow-2xl"
             style={{
@@ -579,7 +579,7 @@ const Nav = () => {
       )}
 
       {profileOpen && currentUser && (
-        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/35 px-4 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-[#fff3e6]/80 px-4 backdrop-blur-sm">
           <div
             className="relative w-full max-w-md rounded-2xl border border-white/40 p-6 text-slate-900 shadow-2xl"
             style={{

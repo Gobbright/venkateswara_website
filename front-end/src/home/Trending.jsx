@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { apiRequest, assetUrl } from "../utils/api";
+import { productPath } from "../utils/productLinks";
 
 import img1 from "../assets/Images/Trend/1.png";
 import img2 from "../assets/Images/Trend/2.png";
@@ -70,7 +71,7 @@ const toTrendingProduct = (product, index) => ({
   originalPrice: Number(product.originalPrice || product.price || fallbackProducts[index].originalPrice),
   rating: 4.5,
   reviews: Number(product.stock || 128),
-  path: product._id ? `/product/${product._id}` : fallbackProducts[index].path,
+  path: product._id ? productPath(product, fallbackProducts[index].path) : fallbackProducts[index].path,
   image: product.image ? assetUrl(product.image) : fallbackProducts[index].image,
 });
 

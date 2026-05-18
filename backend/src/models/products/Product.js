@@ -1,5 +1,26 @@
 import mongoose from "mongoose";
 
+const productReviewSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    comment: {
+      type: String,
+      required: true,
+      trim: true,
+      maxlength: 600,
+    },
+    image: {
+      type: String,
+      default: "",
+    },
+  },
+  { timestamps: true }
+);
+
 export const productSchema = new mongoose.Schema(
   {
     name: {
@@ -84,6 +105,10 @@ export const productSchema = new mongoose.Schema(
     description: {
       type: String,
       default: "",
+    },
+    reviews: {
+      type: [productReviewSchema],
+      default: [],
     },
     isActive: {
       type: Boolean,

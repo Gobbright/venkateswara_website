@@ -4,6 +4,7 @@ import { Grid2X2, ShoppingBag, ShoppingCart, Star } from "lucide-react";
 import { apiRequest, assetUrl } from "../utils/api";
 import { loadShopItems, toggleShopItem } from "../utils/shopItems";
 import { getStoredUser } from "../utils/userSession";
+import { productPath } from "../utils/productLinks";
 
 const productKey = (product) => product._id;
 
@@ -153,6 +154,7 @@ export default function DbProductCollection({ title = "Products", category = "" 
         {visibleProducts.map((product) => {
           const id = productKey(product);
           const productCode = product.productCode || `PRD-${String(id).slice(-5).toUpperCase()}`;
+          const detailsPath = productPath(product, "/categories");
           const isCartAdded = cartProducts.some((item) => item.slug === id);
           const isWishlisted = wishlistProducts.some((item) => item.slug === id);
 
@@ -178,7 +180,7 @@ export default function DbProductCollection({ title = "Products", category = "" 
               </div>
 
               <Link
-                to={`/product/${id}`}
+                to={detailsPath}
                 className="flex h-36 shrink-0 items-center justify-center overflow-hidden bg-white p-2 !no-underline sm:h-52 sm:p-3"
               >
                 {product.image ? (
@@ -203,7 +205,7 @@ export default function DbProductCollection({ title = "Products", category = "" 
                   </span>
                   <span className="text-gray-600">({product.stock})</span>
                 </div>
-                <Link to={`/product/${id}`} className="block !no-underline text-gray-950 hover:text-orange-600">
+                <Link to={detailsPath} className="block !no-underline text-gray-950 hover:text-orange-600">
                   <h2 className="min-h-[34px] text-sm font-semibold leading-tight sm:text-base">
                     {product.name}
                   </h2>
@@ -236,7 +238,7 @@ export default function DbProductCollection({ title = "Products", category = "" 
                     {isCartAdded ? "Added" : "Cart"}
                   </button>
                   <Link
-                    to={`/product/${id}`}
+                    to={detailsPath}
                     className="flex h-9 items-center justify-center gap-1.5 rounded-full bg-gradient-to-r from-orange-600 to-[#4DA7AF] px-1 text-[11px] font-bold text-white transition !no-underline hover:from-black hover:to-black"
                   >
                     <ShoppingBag size={15} />

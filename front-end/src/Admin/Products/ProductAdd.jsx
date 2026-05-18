@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
-import { ImagePlus, PackagePlus } from "lucide-react";
+import { ChevronDown, ImagePlus, PackagePlus } from "lucide-react";
 import { apiRequest, assetUrl } from "../../utils/api";
 
 const emptyForm = {
@@ -12,6 +12,7 @@ const emptyForm = {
   sizes: ["M"],
   discount: "",
   hsn: "",
+  description: "",
   image: "",
 };
 
@@ -59,6 +60,7 @@ export default function ProductAdd({ initialCategory = "Mens" }) {
   const [selectedImage, setSelectedImage] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState("");
+  const [openPreset, setOpenPreset] = useState(null);
   const selectedCategoryData = useMemo(
     () => categories.find((category) => category.name === selectedCategory) ?? { name: selectedCategory, subcategories: [] },
     [categories, selectedCategory]
@@ -92,9 +94,17 @@ export default function ProductAdd({ initialCategory = "Mens" }) {
     }));
   }, [selectedCategoryData]);
 
-  const updateField = (field, value) => {
+  const updateField = (field, value, { closePreset = false } = {}) => {
     setForm((current) => ({ ...current, [field]: value }));
+    if (closePreset) {
+      setOpenPreset(null);
+    }
     setMessage("");
+  };
+
+  const selectPreset = (field, value) => {
+    updateField(field, value);
+    setOpenPreset(null);
   };
 
   const toggleSize = (size) => {
@@ -152,6 +162,7 @@ export default function ProductAdd({ initialCategory = "Mens" }) {
       size: form.sizes.join(", "),
       discount: form.discount === "" ? 0 : Number(form.discount),
       hsn: form.hsn.trim(),
+      description: form.description.trim(),
       image: form.image,
     };
 
@@ -237,32 +248,45 @@ export default function ProductAdd({ initialCategory = "Mens" }) {
                 className="h-12 rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold outline-none focus:border-[#4DA7AF] focus:bg-white"
                 placeholder="Original Price"
               />
-              <div className="grid gap-2">
+              <div className="relative">
                 <input
                   value={form.discount}
-                  onChange={(event) => updateField("discount", event.target.value)}
+                  onChange={(event) => updateField("discount", event.target.value, { closePreset: true })}
+                  onClick={() => setOpenPreset("discount")}
+                  onFocus={() => setOpenPreset("discount")}
+                  onBlur={() => window.setTimeout(() => setOpenPreset(null), 120)}
                   type="number"
                   min="0"
-                  className="h-12 rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold outline-none focus:border-[#4DA7AF] focus:bg-white"
-                  placeholder="%"
+                  className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 pr-11 text-sm font-semibold outline-none focus:border-[#4DA7AF] focus:bg-white"
+                  placeholder="Discount %"
                 />
-                <div className="grid grid-cols-3 gap-2">
-                  {discountOptions.map((discount) => (
-                    <button
-                      key={discount}
-                      type="button"
-                      onClick={() => updateField("discount", discount)}
-                      className={`h-9 rounded-xl border text-xs font-extrabold transition ${
-                        String(form.discount) === discount
-                          ? "border-[#4DA7AF] bg-[#4DA7AF] text-white"
-                          : "border-slate-200 bg-white text-slate-600 hover:border-[#4DA7AF] hover:text-[#23777f]"
-                      }`}
-                    >
-                      {discount}%
-                    </button>
-                  ))}
+                <button
+                  type="button"
+                  onClick={() => setOpenPreset((current) => (current === "discount" ? null : "discount"))}
+                  className="absolute right-3 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full bg-white text-[#23777f] shadow-sm"
+                  aria-label="Open discount options"
+                >
+                  <ChevronDown size={16} className={`transition ${openPreset === "discount" ? "rotate-180" : ""}`} />
+                </button>
+                {openPreset === "discount" && (
+                  <div className="absolute left-0 right-0 top-[calc(100%+8px)] z-30 grid grid-cols-3 gap-2 rounded-2xl border border-[#4DA7AF]/25 bg-[#e9fbfc] p-2 shadow-xl">
+                    {discountOptions.map((discount) => (
+                      <button
+                        key={discount}
+                        type="button"
+                        onClick={() => selectPreset("discount", discount)}
+                        className={`h-9 rounded-xl border text-xs font-extrabold transition ${
+                          String(form.discount) === discount
+                            ? "border-[#4DA7AF] bg-[#4DA7AF] text-white"
+                            : "border-white bg-white text-slate-600 hover:border-[#4DA7AF] hover:text-[#23777f]"
+                        }`}
+                      >
+                        {discount}%
+                      </button>
+                    ))}
+                  </div>
+                )}
                 </div>
-              </div>
               <div className="flex h-12 items-center justify-between rounded-2xl border border-[#4DA7AF]/20 bg-[#e9fbfc] px-4">
                 <span className="text-xs font-extrabold uppercase tracking-[0.12em] text-[#23777f]">Selling Price</span>
                 <span className="text-lg font-extrabold text-slate-950">
@@ -289,32 +313,45 @@ export default function ProductAdd({ initialCategory = "Mens" }) {
                   <option key={subcategory}>{subcategory}</option>
                 ))}
               </select>
-              <div className="grid gap-2">
+              <div className="relative">
                 <input
                   value={form.stock}
-                  onChange={(event) => updateField("stock", event.target.value)}
+                  onChange={(event) => updateField("stock", event.target.value, { closePreset: true })}
+                  onClick={() => setOpenPreset("stock")}
+                  onFocus={() => setOpenPreset("stock")}
+                  onBlur={() => window.setTimeout(() => setOpenPreset(null), 120)}
                   type="number"
                   min="0"
-                  className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-5 text-center text-sm font-semibold outline-none focus:border-[#4DA7AF] focus:bg-white"
+                  className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-5 pr-11 text-center text-sm font-semibold outline-none focus:border-[#4DA7AF] focus:bg-white"
                   placeholder="Quantity"
                 />
-                <div className="grid grid-cols-3 gap-2">
-                  {stockOptions.map((stock) => (
-                    <button
-                      key={stock}
-                      type="button"
-                      onClick={() => updateField("stock", stock)}
-                      className={`h-9 rounded-xl border text-xs font-extrabold transition ${
-                        String(form.stock) === stock
-                          ? "border-[#4DA7AF] bg-[#4DA7AF] text-white"
-                          : "border-slate-200 bg-white text-slate-600 hover:border-[#4DA7AF] hover:text-[#23777f]"
-                      }`}
-                    >
-                      {stock}
-                    </button>
-                  ))}
+                <button
+                  type="button"
+                  onClick={() => setOpenPreset((current) => (current === "stock" ? null : "stock"))}
+                  className="absolute right-3 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full bg-white text-[#23777f] shadow-sm"
+                  aria-label="Open stock options"
+                >
+                  <ChevronDown size={16} className={`transition ${openPreset === "stock" ? "rotate-180" : ""}`} />
+                </button>
+                {openPreset === "stock" && (
+                  <div className="absolute left-0 right-0 top-[calc(100%+8px)] z-30 grid grid-cols-3 gap-2 rounded-2xl border border-[#4DA7AF]/25 bg-[#e9fbfc] p-2 shadow-xl">
+                    {stockOptions.map((stock) => (
+                      <button
+                        key={stock}
+                        type="button"
+                        onClick={() => selectPreset("stock", stock)}
+                        className={`h-9 rounded-xl border text-xs font-extrabold transition ${
+                          String(form.stock) === stock
+                            ? "border-[#4DA7AF] bg-[#4DA7AF] text-white"
+                            : "border-white bg-white text-slate-600 hover:border-[#4DA7AF] hover:text-[#23777f]"
+                        }`}
+                      >
+                        {stock}
+                      </button>
+                    ))}
+                  </div>
+                )}
                 </div>
-              </div>
             </div>
             <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_220px_260px] lg:items-start">
               <div className="flex min-h-12 items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2">
@@ -354,6 +391,12 @@ export default function ProductAdd({ initialCategory = "Mens" }) {
                 placeholder="HSN Code"
               />
             </div>
+            <textarea
+              value={form.description}
+              onChange={(event) => updateField("description", event.target.value)}
+              className="min-h-28 rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 text-sm font-semibold outline-none focus:border-[#4DA7AF] focus:bg-white"
+              placeholder="Product description"
+            />
             {message && (
               <p className="rounded-2xl bg-orange-50 px-4 py-3 text-sm font-bold text-orange-700">
                 {message}

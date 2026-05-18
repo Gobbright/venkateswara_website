@@ -148,6 +148,7 @@ export default function ProductList() {
         size: (editForm.sizes || parseSizes(editForm.size)).join(", "),
         discount: editForm.discount === "" ? 0 : Number(editForm.discount || 0),
         hsn: editForm.hsn?.trim() || "",
+        description: editForm.description?.trim() || "",
       };
       const result = await apiRequest(`/products/${editingId}`, {
         method: "PUT",
@@ -353,8 +354,8 @@ export default function ProductList() {
 
       {editForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 px-4 py-6">
-          <div className="w-full max-w-2xl rounded-3xl bg-white p-5 shadow-2xl">
-            <div className="mb-5 flex items-start justify-between gap-4">
+          <div className="flex max-h-[92vh] w-full max-w-5xl flex-col rounded-3xl bg-white p-5 shadow-2xl">
+            <div className="mb-5 flex shrink-0 items-start justify-between gap-4">
               <div>
                 <h3 className="text-xl font-extrabold text-slate-950">Edit Product</h3>
                 <p className="mt-1 text-sm font-semibold text-slate-500">Update product details.</p>
@@ -374,7 +375,7 @@ export default function ProductList() {
                 event.preventDefault();
                 saveEdit();
               }}
-              className="grid gap-4"
+              className="grid min-h-0 gap-4 overflow-y-auto pr-1"
             >
               <input ref={editImageInputRef} type="file" accept="image/*" onChange={handleEditImageChange} className="hidden" />
               <button
@@ -501,6 +502,12 @@ export default function ProductList() {
                   Rs. {editSellingPrice.toLocaleString("en-IN")}
                 </p>
               </div>
+              <textarea
+                value={editForm.description ?? ""}
+                onChange={(event) => updateEditField("description", event.target.value)}
+                className="min-h-28 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold outline-none focus:border-[#4DA7AF] focus:bg-white"
+                placeholder="Product description"
+              />
               <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:justify-end">
                 <button
                   type="button"

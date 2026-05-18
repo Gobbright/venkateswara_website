@@ -23,10 +23,13 @@ const allowedOrigins = [
   "http://127.0.0.1:5173",
 ].filter(Boolean);
 
+const isAllowedDevOrigin = (origin) =>
+  /^http:\/\/(localhost|127\.0\.0\.1):517\d$/.test(origin);
+
 app.use(
   cors({
     origin(origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
+      if (!origin || allowedOrigins.includes(origin) || isAllowedDevOrigin(origin)) {
         callback(null, true);
         return;
       }

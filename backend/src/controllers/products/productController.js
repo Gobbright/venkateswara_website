@@ -1,10 +1,11 @@
 import asyncHandler from "../../middleware/asyncHandler.js";
+import mongoose from "mongoose";
 import {
   getAllProductModels,
   getProductModelByCategory,
   productCollections,
 } from "../../models/products/Product.js";
-import { deleteProductImage, isDataUrlImage, saveProductImage } from "../../utils/uploads/productImageUpload.js";
+import { deleteProductImage, isDataUrlImage, saveProductImage, saveReviewImage } from "../../utils/uploads/productImageUpload.js";
 
 const createProductCode = async () => {
   const productGroups = await Promise.all(
@@ -147,9 +148,42 @@ export const deleteProduct = asyncHandler(async (req, res) => {
   res.json({ success: true, data: product });
 });
 
+export const addProductReview = asyncHandler(async (req, res) => {
+  const product = await findProductById(req.params.id, { status: 1 });
+
+  if (!product) {
+    res.status(404);
+    throw new Error("Product not found");
+  }
+
+  const name = String(req.user?.name || "").trim();
+  const comment = String(req.body.comment || "").trim();
+
+  if (!name || !comment) {
+    res.status(400);
+    throw new Error("Verified user and comment are required.");
+  }
+
+  const image = await saveReviewImage(req.body.image, product.productCode || product._id);
+  product.reviews.unshift({ name, comment, image });
+  await product.save();
+
+  res.status(201).json({ success: true, data: product.reviews });
+});
+
 const findProductById = async (id, extraFilter = {}) => {
+  const identifier = decodeURIComponent(String(id || "").trim());
+  const identifierFilter = [
+    { productCode: identifier.toUpperCase() },
+    { slug: identifier },
+  ];
+
+  if (mongoose.Types.ObjectId.isValid(identifier)) {
+    identifierFilter.push({ _id: identifier });
+  }
+
   for (const { model } of getAllProductModels()) {
-    const product = await model.findOne({ _id: id, ...extraFilter });
+    const product = await model.findOne({ ...extraFilter, $or: identifierFilter });
 
     if (product) {
       return product;

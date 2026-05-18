@@ -4,6 +4,7 @@ import { ShoppingCart, Star } from "lucide-react";
 import { apiRequest, assetUrl } from "../utils/api";
 import { loadShopItems, toggleShopItem } from "../utils/shopItems";
 import { getStoredUser } from "../utils/userSession";
+import { productPath } from "../utils/productLinks";
 
 // Replace these with your actual image imports
 import saree1 from "../assets/Images/Collection/1.png";
@@ -77,7 +78,7 @@ const toCollectionProduct = (product, index) => ({
   name: product.name || fallbackProducts[index]?.name || "Latest Product",
   price: Number(product.price || fallbackProducts[index]?.price || 0),
   originalPrice: Number(product.originalPrice || product.price || fallbackProducts[index]?.originalPrice || 0),
-  path: product._id ? `/product/${product._id}` : fallbackProducts[index]?.path || "/categories",
+  path: product._id ? productPath(product, fallbackProducts[index]?.path || "/categories") : fallbackProducts[index]?.path || "/categories",
   category: product.category || fallbackProducts[index]?.category || "Latest Collection",
   subcategory: product.subcategory || "",
   productCode: product.productCode || "",
